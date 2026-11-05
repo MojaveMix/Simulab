@@ -1,0 +1,150 @@
+// Plain-language "what do the letters mean?" legends, keyed by formula name
+// (see simulationRegistry.js). Each entry: [LaTeX symbol, everyday meaning].
+
+export const FORMULA_LEGENDS = {
+  "Digital Root Congruence": [
+    ["n", "any whole number, e.g. a product like 7 × 8 = 56"],
+    ["dr(n)", "the 'digital root': keep adding the digits until one digit is left (56 → 5+6 = 11 → 1+1 = 2)"],
+    ["\\bmod 9", "'remainder after dividing by 9'"],
+  ],
+  "9-Sum Complement Reflection": [
+    ["r, c", "the row and column of the multiplication table"],
+    ["9 - r", "the 'mirror' row: 1 ↔ 8, 2 ↔ 7, 3 ↔ 6, 4 ↔ 5"],
+    ["\\equiv 9", "the two answers always add up to 9"],
+  ],
+  "3D Harmonic Pillar Wave": [
+    ["h", "height of a pillar"],
+    ["h_0", "its resting height"],
+    ["A", "how tall the wave is"],
+    ["\\sqrt{x^2+z^2}", "how far the pillar is from the centre"],
+    ["t", "time"],
+  ],
+  "Instantaneous Derivative & Tangent": [
+    ["f(x)", "the curve you see on the graph"],
+    ["x_0", "the point you picked (the yellow dot)"],
+    ["f'(x_0)", "the slope: how steeply the curve climbs or falls at that point"],
+    ["h", "a tiny step left and right"],
+  ],
+  "Definite Riemann & Simpson Integral": [
+    ["\\int_a^b", "'add up the area under the curve from a to b'"],
+    ["\\Delta x", "the width of each thin rectangle"],
+    ["N", "how many rectangles are used (more = more accurate)"],
+  ],
+  "Fourier Odd-Harmonic Series": [
+    ["A", "overall height"],
+    ["\\sum", "'add all of these up'"],
+    ["N", "how many smooth waves are stacked together"],
+    ["\\phi", "a sideways shift of the wave"],
+  ],
+  "Lorenz Convection System": [
+    ["x, y, z", "the position of the moving point in 3D"],
+    ["\\frac{dx}{dt}", "how fast x is changing right now"],
+    ["\\sigma", "how strongly the fluid layers drag each other (Prandtl number)"],
+    ["\\rho", "how hard the fluid is heated (Rayleigh number)"],
+    ["\\beta", "the shape of the fluid cell"],
+  ],
+  "Phase Volume Contraction (Lie Derivative)": [
+    ["\\nabla \\cdot \\mathbf{F}", "does the cloud of possible states grow or shrink?"],
+    ["< 0", "it shrinks: everything is pulled onto the butterfly shape"],
+  ],
+  "Binomial Probability Mass": [
+    ["n", "number of rows of pegs"],
+    ["k", "how many times the ball bounced right"],
+    ["p", "chance of bouncing right at each peg"],
+    ["P(X=k)", "chance the ball lands in slot k"],
+    ["\\binom{n}{k}", "the number of different paths that end in slot k"],
+  ],
+  "Central Limit Moments": [
+    ["\\mu", "the average slot"],
+    ["\\sigma", "how spread out the balls are"],
+    ["n, p", "rows of pegs and the chance of going right"],
+  ],
+  "Monte Carlo Quadrature for π": [
+    ["\\hat{\\pi}", "our estimate of π"],
+    ["N_{\\text{inside}}", "random dots that landed inside the circle"],
+    ["N_{\\text{total}}", "all random dots thrown"],
+    ["4", "the square is 4 times bigger than the quarter-circle ratio needs"],
+  ],
+  "Newtonian Equations with Quadratic Drag": [
+    ["m", "mass of the projectile"],
+    ["\\mathbf{v}", "its velocity (speed and direction)"],
+    ["\\mathbf{g}", "gravity, pulling down"],
+    ["\\rho, C_d, A", "air density, streamlining, and frontal area: together they set how strong air resistance is"],
+  ],
+  "Ideal Vacuum Range & Apex": [
+    ["v_0", "launch speed"],
+    ["\\theta", "launch angle"],
+    ["g", "gravity strength"],
+    ["R_{\\text{vac}}", "distance flown with no air"],
+    ["H_{\\max}", "highest point reached"],
+  ],
+  "Mechanical Energy Balance": [
+    ["\\tfrac{1}{2}mv^2", "movement energy (kinetic)"],
+    ["mgy", "height energy (potential)"],
+    ["E_0", "energy at launch"],
+    ["W_{\\text{drag}}", "energy lost to air resistance as heat"],
+  ],
+  "System Lagrangian": [
+    ["T", "movement energy of both bobs"],
+    ["V", "height energy of both bobs"],
+    ["L_1, L_2", "lengths of the two rods"],
+    ["m_1, m_2", "masses of the two bobs"],
+    ["\\theta_1, \\theta_2", "the angle of each rod"],
+  ],
+  "Small-Angle Harmonic Period": [
+    ["T_0", "time for one full swing"],
+    ["L_1", "rod length"],
+    ["g", "gravity strength"],
+  ],
+  "Vis-Viva Orbital Velocity": [
+    ["v", "speed of the planet"],
+    ["r", "its current distance from the star"],
+    ["a", "the average size of the orbit"],
+    ["GM", "how strongly the star pulls"],
+  ],
+  "Kepler's Third Harmonic Law": [
+    ["T", "the length of one year on that planet"],
+    ["a", "average orbit size"],
+    ["e", "how stretched the orbit is (0 = circle)"],
+    ["\\nu", "where the planet is along its orbit"],
+  ],
+  "Two-Source Wave Superposition": [
+    ["\\Psi", "total height of the water at a point"],
+    ["r_1, r_2", "distance from the point to each source"],
+    ["k", "wave number: how tightly packed the waves are"],
+    ["\\omega", "how fast the waves oscillate"],
+    ["\\phi", "timing offset between the two sources"],
+  ],
+  "Constructive & Destructive Fringe Condition": [
+    ["\\Delta r", "difference between the two distances"],
+    ["\\lambda", "wavelength: distance between two crests"],
+    ["m", "a whole number: 0, 1, 2, …"],
+    ["maxima / nodes", "big waves / calm water"],
+  ],
+  "Snell-Descartes Law of Refraction": [
+    ["n_1, n_2", "how much each material slows light (air ≈ 1, glass ≈ 1.5)"],
+    ["\\theta_1", "angle the light arrives at"],
+    ["\\theta_2", "angle after it bends"],
+    ["\\theta_c", "critical angle: past it, light cannot escape"],
+  ],
+  "Gaussian Thin Lens Equation": [
+    ["f", "focal length of the lens"],
+    ["d_o", "distance from object to lens"],
+    ["d_i", "distance from lens to image"],
+    ["M", "magnification: how much bigger or smaller (negative = upside-down)"],
+    ["h_o, h_i", "heights of the object and the image"],
+  ],
+  "Ideal Gas Equation of State": [
+    ["P", "pressure"],
+    ["V", "volume of the container"],
+    ["n", "amount of gas (moles)"],
+    ["T", "temperature in Kelvin"],
+    ["R", "a fixed constant of nature (8.314)"],
+  ],
+  "Maxwell-Boltzmann Speeds": [
+    ["v_{\\text{rms}}", "typical molecule speed"],
+    ["T", "temperature in Kelvin"],
+    ["M", "mass of one mole of the gas"],
+    ["R", "a fixed constant of nature (8.314)"],
+  ],
+};

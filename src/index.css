@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --active-color: #06d6a0;
+  }
+
+  body {
+    background-color: #05050a;
+    color: #f1f5f9;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html.light body {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+}
+
+/* Custom modern range slider */
+.vedic-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+.vedic-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--active-color, #22d3ee);
+  cursor: pointer;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 14px var(--active-color, #22d3ee);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vedic-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 20px var(--active-color, #22d3ee);
+}
+
+.vedic-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--active-color, #22d3ee);
+  cursor: pointer;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 14px var(--active-color, #22d3ee);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Subtle glass grid background (Dark & Light) */
+.bg-cosmic-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.light-theme.bg-cosmic-grid {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+}
+
+/* Comprehensive Light Theme surface & typography adaptation */
+.light-theme [class*="bg-slate-900"] {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.light-theme [class*="bg-slate-950"] {
+  background-color: rgba(241, 245, 249, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.light-theme [class*="bg-slate-800"] {
+  background-color: #e2e8f0 !important;
+}
+
+.light-theme .text-white {
+  color: #0f172a !important;
+}
+
+.light-theme .text-slate-100,
+.light-theme .text-slate-200,
+.light-theme .text-slate-300,
+.light-theme [class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+.light-theme .text-slate-400,
+.light-theme .text-slate-500 {
+  color: #475569 !important;
+}
+
+.light-theme .text-cyan-200,
+.light-theme .text-cyan-300,
+.light-theme .text-cyan-400 {
+  color: #0284c7 !important;
+}
+
+.light-theme .text-purple-200,
+.light-theme .text-purple-300,
+.light-theme .text-purple-400 {
+  color: #7e22ce !important;
+}
+
+.light-theme .text-emerald-200,
+.light-theme .text-emerald-300,
+.light-theme .text-emerald-400 {
+  color: #047857 !important;
+}
+
+.light-theme .text-amber-200,
+.light-theme .text-amber-300,
+.light-theme .text-amber-400 {
+  color: #b45309 !important;
+}
+
+.light-theme [class*="border-white/"] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Keep interactive 3D/2D canvas HUD overlays & colored buttons readable in Light Mode */
+.light-theme .light-nav {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light-theme .light-nav .text-white {
+  color: #0f172a !important;
+}
+
+.light-theme .light-nav [class*="bg-slate-900"] {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light-theme .light-nav-menu {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.15) !important;
+}
+
+.light-theme .light-nav-menu .text-white {
+  color: #0f172a !important;
+}
+
+.light-theme .light-nav-menu [class*="bg-slate-900"] {
+  background-color: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light-theme .light-nav-menu [class*="hover:bg-slate-800"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.light-theme .sim-viewport-dark [class*="bg-slate-950"] {
+  background-color: rgba(15, 23, 42, 0.82) !important;
+}
+.light-theme .sim-viewport-dark .text-white {
+  color: #ffffff !important;
+}
+.light-theme .sim-viewport-dark .text-slate-300,
+.light-theme .sim-viewport-dark [class*="text-slate-300"] {
+  color: #cbd5e1 !important;
+}
+.light-theme .sim-viewport-dark .text-cyan-300 {
+  color: #67e8f9 !important;
+}
