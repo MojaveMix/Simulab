@@ -24,9 +24,36 @@ import {
   OpticsRayTracer2D,
   ThermodynamicsGas2D,
 } from "../components/Sim2DVisualizers";
+import {
+  FunctionGrapher2D,
+  UnitCircle2D,
+  SpringOscillator2D,
+  CircuitLab2D,
+  InclineForces2D,
+} from "../components/ExtraSimCanvases";
+import {
+  computeFunctionGrapher,
+  computeUnitCircle,
+  computeSpring,
+  computeCircuit,
+  computeIncline,
+} from "../engine/extraSimulations";
 import { BeginnerGuideCard, FormulaCards } from "../components/EducationPanels";
+import { useLanguage } from "../i18n/LanguageContext";
+import {
+  getLocalizedSimulation,
+  getLocalizedTelemetryLabel,
+  getLocalizedPresetName,
+  getLocalizedParamLabel,
+} from "../i18n/simulationsI18n";
 
 export default function UniversalSimRunner({ simulation, externalParams }) {
+  const { lang, t } = useLanguage();
+  const locSim = useMemo(
+    () => getLocalizedSimulation(simulation, lang),
+    [simulation, lang]
+  );
+
   const [params, setParams] = useState(() => ({
     ...simulation.defaultParams,
     ...(externalParams || {}),
@@ -177,10 +204,94 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           ],
         };
       }
+      case "function-grapher": {
+        const res = computeFunctionGrapher(params);
+        const fx = (v) => (Number.isFinite(v) ? v.toFixed(3) : "undefined");
+        const rootText = res.roots.length
+          ? res.roots.slice(0, 3).map((r) => r.toFixed(2)).join(", ")
+          : "none in view";
+        return {
+          modelData: res,
+          telemetry: [
+            { label: "Height at your point", value: fx(res.y0) },
+            { label: "Slope at your point", value: fx(res.slope) },
+            { label: "Crosses the y-axis at", value: fx(res.yInt) },
+            { label: "Crosses the x-axis at", value: rootText },
+            {
+              label: "Going…",
+              value: !Number.isFinite(res.slope) ? "—" : Math.abs(res.slope) < 0.01 ? "Flat here" : res.slope > 0 ? "Up ↗" : "Down ↘",
+            },
+            {
+              label: res.discriminant === null ? "Roots found" : "Discriminant (b²−4ac)",
+              value: res.discriminant === null ? `${res.roots.length}` : res.discriminant.toFixed(2),
+            },
+          ],
+        };
+      }
+      case "unit-circle-trig": {
+        const res = computeUnitCircle(params);
+        return {
+          modelData: res,
+          telemetry: [
+            { label: "Angle (radians)", value: res.rad.toFixed(3) },
+            { label: "sin θ (height)", value: res.sin.toFixed(4) },
+            { label: "cos θ (width)", value: res.cos.toFixed(4) },
+            { label: "tan θ (sin ÷ cos)", value: Number.isFinite(res.tan) ? res.tan.toFixed(4) : "undefined" },
+            { label: "sin² + cos²", value: res.identity.toFixed(4) },
+            { label: "Quadrant", value: res.quadrant },
+          ],
+        };
+      }
+      case "spring-oscillator": {
+        const res = computeSpring(params);
+        return {
+          modelData: res,
+          telemetry: [
+            { label: "Time for one swing", value: `${res.period.toFixed(2)} s` },
+            { label: "Swings per second", value: `${res.frequency.toFixed(2)} Hz` },
+            { label: "Natural speed ω₀", value: `${res.w0.toFixed(2)} rad/s` },
+            { label: "Top speed", value: `${res.maxSpeed.toFixed(2)} m/s` },
+            { label: "Starting energy", value: `${res.energy.toFixed(2)} J` },
+            { label: "Friction type", value: res.regime },
+          ],
+        };
+      }
+      case "circuit-ohm-lab": {
+        const res = computeCircuit(params);
+        return {
+          modelData: res,
+          telemetry: [
+            { label: "Total resistance", value: `${res.rEq.toFixed(2)} Ω` },
+            { label: "Total current", value: `${res.I.toFixed(3)} A` },
+            { label: "Current through R₁", value: `${res.i1.toFixed(3)} A` },
+            { label: "Current through R₂", value: `${res.i2.toFixed(3)} A` },
+            { label: "Voltage across R₁ / R₂", value: `${res.v1.toFixed(1)} / ${res.v2.toFixed(1)} V` },
+            { label: "Total power", value: `${res.power.toFixed(2)} W` },
+          ],
+        };
+      }
+      case "incline-forces-lab": {
+        const res = computeIncline(params);
+        return {
+          modelData: res,
+          telemetry: [
+            { label: "Weight", value: `${res.W.toFixed(1)} N` },
+            { label: "Ramp pushes back (normal)", value: `${res.N.toFixed(1)} N` },
+            { label: "Pull down the slope", value: `${res.along.toFixed(1)} N` },
+            { label: "Friction", value: `${Math.abs(res.frictionForce).toFixed(1)} N` },
+            { label: "Acceleration", value: `${res.accel.toFixed(2)} m/s²` },
+            { label: "What happens", value: res.status },
+          ],
+        };
+      }
       default:
         return { modelData: null, telemetry: [] };
     }
   }, [simulation.id, params]);
+
+  const controls = simulation.getParamControls
+    ? simulation.getParamControls(params)
+    : simulation.paramControls;
 
   return (
     <div className="space-y-6">
@@ -196,13 +307,13 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
               }}
             />
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-              {simulation.title}
+              {locSim.title}
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-white/5 border border-white/10 text-cyan-300">
-              {simulation.badge}
+              {locSim.badge || locSim.category}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">{simulation.summary}</p>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">{locSim.summary}</p>
         </div>
 
         {/* Real-Time Transport Controls (Play/Pause & Reset) */}
@@ -210,22 +321,22 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           <button
             type="button"
             onClick={() => setIsPlaying((p) => !p)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer ${
               isPlaying
                 ? "bg-emerald-500/20 border-emerald-400/60 text-emerald-200"
                 : "bg-amber-500/20 border-amber-400/60 text-amber-200"
             }`}
           >
             <span>{isPlaying ? "⏸" : "▶"}</span>
-            {isPlaying ? "Running (Pause)" : "Paused (Resume)"}
+            {isPlaying ? t("workspace.runningPause") : t("workspace.pausedResume")}
           </button>
 
           <button
             type="button"
             onClick={handleReset}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-950/80 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-950/80 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
           >
-            ↺ Reset Defaults
+            {t("workspace.resetDefaults")}
           </button>
         </div>
       </div>
@@ -238,7 +349,7 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           {simulation.presets && simulation.presets.length > 0 && (
             <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                Validated Experiment Presets
+                {t("workspace.presets")}
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {simulation.presets.map((preset) => (
@@ -246,10 +357,12 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
                     key={preset.name}
                     type="button"
                     onClick={() => setParams((prev) => ({ ...prev, ...preset.params }))}
-                    className="px-3.5 py-2.5 rounded-xl text-left text-xs font-semibold bg-slate-950/70 hover:bg-slate-800/80 border border-white/10 hover:border-cyan-400/40 text-slate-200 hover:text-white transition-all flex items-center justify-between"
+                    className="px-3.5 py-2.5 rounded-xl text-left rtl:text-right text-xs font-semibold bg-slate-950/70 hover:bg-slate-800/80 border border-white/10 hover:border-cyan-400/40 text-slate-200 hover:text-white transition-all flex items-center justify-between cursor-pointer"
                   >
-                    <span>{preset.name}</span>
-                    <span className="text-cyan-400 text-[11px]">Apply →</span>
+                    <span>{getLocalizedPresetName(preset.name, lang)}</span>
+                    <span className="text-cyan-400 text-[11px] rtl:rotate-180 inline-block">
+                      {t("workspace.applyPreset")}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -260,7 +373,7 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           {simulation.id === "chaos-attractor-3d" && (
             <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                Nonlinear Attractor Manifold
+                {t("workspace.nonlinearManifold")}
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -272,7 +385,7 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
                     key={sys.id}
                     type="button"
                     onClick={() => handleParamChange("system", sys.id)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                       params.system === sys.id
                         ? "bg-rose-500/20 border-rose-400 text-white"
                         : "bg-slate-950/60 border-white/10 text-slate-400 hover:text-white"
@@ -286,17 +399,19 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           )}
 
           {/* Real-Time Variable Sliders */}
-          {simulation.paramControls && (
+          {controls && (
             <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                  Real-Time Variable Controls
+                  {t("workspace.variableControls")}
                 </h3>
-                <span className="text-[11px] font-mono text-slate-400">Live Solver</span>
+                <span className="text-[11px] font-mono text-slate-400">
+                  {t("workspace.liveSolver")}
+                </span>
               </div>
 
               <div className="space-y-3.5">
-                {simulation.paramControls.map((ctrl) => {
+                {controls.map((ctrl) => {
                   const val = params[ctrl.key] ?? simulation.defaultParams[ctrl.key] ?? 0;
                   return (
                     <div key={ctrl.key}>
@@ -305,9 +420,9 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
                           htmlFor={`slider-${ctrl.key}`}
                           className="text-slate-300 font-medium"
                         >
-                          {ctrl.label}
+                          {getLocalizedParamLabel(ctrl.label, lang)}
                         </label>
-                        <span className="font-mono text-cyan-300 font-semibold">
+                        <span className="font-mono text-cyan-300 font-semibold" dir="ltr">
                           {typeof val === "number" ? val.toFixed(ctrl.step < 0.1 ? 2 : ctrl.step < 1 ? 1 : 0) : val}{" "}
                           {ctrl.unit}
                         </span>
@@ -321,6 +436,7 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
                         value={val}
                         onChange={(e) => handleParamChange(ctrl.key, parseFloat(e.target.value))}
                         className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                        dir="ltr"
                       />
                     </div>
                   );
@@ -333,9 +449,11 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                Live Experiment Telemetry
+                {t("workspace.liveTelemetry")}
               </h3>
-              <span className="text-[11px] font-mono text-slate-400">SI Units</span>
+              <span className="text-[11px] font-mono text-slate-400">
+                {t("workspace.siUnits")}
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               {telemetry.map((item) => (
@@ -343,8 +461,10 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
                   key={item.label}
                   className="p-2.5 rounded-xl bg-slate-950/80 border border-white/5"
                 >
-                  <div className="text-[11px] text-slate-400">{item.label}</div>
-                  <div className="text-sm font-mono font-bold text-white mt-0.5">
+                  <div className="text-[11px] text-slate-400">
+                    {getLocalizedTelemetryLabel(item.label, lang)}
+                  </div>
+                  <div className="text-sm font-mono font-bold text-white mt-0.5" dir="ltr">
                     {item.value}
                   </div>
                 </div>
@@ -402,6 +522,26 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
             {simulation.id === "optics-refraction-lens" && (
               <OpticsRayTracer2D data={modelData} />
             )}
+            {simulation.id === "function-grapher" && (
+              <FunctionGrapher2D
+                data={modelData}
+                params={params}
+                isPlaying={isPlaying}
+                onChangeParam={handleParamChange}
+              />
+            )}
+            {simulation.id === "unit-circle-trig" && (
+              <UnitCircle2D params={params} isPlaying={isPlaying} />
+            )}
+            {simulation.id === "spring-oscillator" && (
+              <SpringOscillator2D params={params} isPlaying={isPlaying} />
+            )}
+            {simulation.id === "circuit-ohm-lab" && (
+              <CircuitLab2D params={params} isPlaying={isPlaying} onChangeParam={handleParamChange} />
+            )}
+            {simulation.id === "incline-forces-lab" && (
+              <InclineForces2D params={params} isPlaying={isPlaying} />
+            )}
             {simulation.id === "thermodynamics-gas-lab" && (
               <ThermodynamicsGas2D
                 data={modelData}
@@ -415,22 +555,27 @@ export default function UniversalSimRunner({ simulation, externalParams }) {
           <div className="space-y-6">
             <BeginnerGuideCard simId={simulation.id} accentColor={simulation.accentColor} />
 
-            <FormulaCards formulas={simulation.formulas} title="The math behind it" />
+            <FormulaCards
+              formulas={simulation.formulas}
+              title={t("workspace.theMathBehindIt")}
+            />
 
             <div className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl flex flex-col justify-between">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300 mb-2">
-                  The bigger picture
+                  {t("workspace.theBiggerPicture")}
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  {simulation.theory}
+                  {locSim.theory}
                 </p>
               </div>
 
               <div className="mt-4 pt-3 border-t border-white/10 text-xs text-slate-400 space-y-1">
-                <div className="font-semibold text-white">Category &amp; Engine</div>
+                <div className="font-semibold text-white">
+                  {t("workspace.categoryAndEngine")}
+                </div>
                 <div className="flex items-center justify-between">
-                  <span>{simulation.category}</span>
+                  <span>{locSim.category}</span>
                   <span className="font-mono text-cyan-300">{simulation.renderType}</span>
                 </div>
               </div>

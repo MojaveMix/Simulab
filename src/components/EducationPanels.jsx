@@ -1,11 +1,13 @@
 import MathFormula from "./MathFormula";
-import { FORMULA_LEGENDS } from "../engine/formulaLegends";
+import { FORMULA_LEGENDS, getFormulaLegend } from "../engine/formulaLegends";
 import { getBeginnerGuide } from "../engine/beginnerGuides";
 import { LightbulbIcon, EyeIcon, SlidersIcon } from "./Icons";
+import { useLanguage } from "../i18n/LanguageContext";
 
 /** Friendly "Start here" card: what this is, what you see, what to try. */
 export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
-  const guide = getBeginnerGuide(simId);
+  const { lang, t } = useLanguage();
+  const guide = getBeginnerGuide(simId, lang);
   if (!guide) return null;
 
   return (
@@ -16,7 +18,7 @@ export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
     >
       <div className="flex items-center gap-2 mb-1">
         <LightbulbIcon className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-bold text-white">New here? Start with this</h3>
+        <h3 className="text-sm font-bold text-white">{t("education.startHere")}</h3>
       </div>
       <p className="text-sm font-semibold" style={{ color: accentColor }}>
         {guide.hook}
@@ -27,7 +29,7 @@ export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
             <EyeIcon className="w-3.5 h-3.5 text-cyan-400" />
-            <span>What you are seeing</span>
+            <span>{t("education.whatYouAreSeeing")}</span>
           </div>
           <ul className="space-y-1.5 text-sm text-slate-300 list-disc list-inside leading-relaxed">
             {guide.see.map((s) => (
@@ -38,7 +40,7 @@ export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
             <SlidersIcon className="w-3.5 h-3.5 text-purple-400" />
-            <span>Try this</span>
+            <span>{t("education.tryThis")}</span>
           </div>
           <ul className="space-y-1.5 text-sm text-slate-300 list-disc list-inside leading-relaxed">
             {guide.tryThis.map((s) => (
@@ -52,12 +54,19 @@ export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
 }
 
 /** Textbook-style equations, each with a plain-words explanation and a symbol legend. */
-export function FormulaCards({ formulas, title = "The math behind it", columns = 1 }) {
+export function FormulaCards({ formulas, title, columns = 1 }) {
+  const { lang, t } = useLanguage();
+  const effectiveTitle = title || t("workspace.theMathBehindIt");
+
   return (
     <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-300">{title}</h3>
-        <span className="text-[11px] text-slate-400">Read the words first, the equation second</span>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+          {effectiveTitle}
+        </h3>
+        <span className="text-[11px] text-slate-400">
+          {t("workspace.readWordsFirst")}
+        </span>
       </div>
 
       <div
@@ -66,7 +75,7 @@ export function FormulaCards({ formulas, title = "The math behind it", columns =
         }`}
       >
         {formulas.map((f) => {
-          const legend = FORMULA_LEGENDS[f.name];
+          const legend = getFormulaLegend(f.name, lang) || FORMULA_LEGENDS[f.name];
           return (
             <article
               key={f.name}
@@ -75,19 +84,25 @@ export function FormulaCards({ formulas, title = "The math behind it", columns =
               <h4 className="text-sm font-bold text-white">{f.name}</h4>
               <p className="text-sm text-slate-300 mt-1 leading-relaxed">{f.desc}</p>
 
-              <div className="mt-3 px-3 py-3 rounded-lg bg-slate-900/90 border border-white/5 overflow-x-auto text-center text-white text-[1.05rem]">
+              <div
+                className="mt-3 px-3 py-3 rounded-lg bg-slate-900/90 border border-white/5 overflow-x-auto text-center text-white text-[1.05rem]"
+                dir="ltr"
+              >
                 <MathFormula latex={f.latex} display />
               </div>
 
               {legend && (
                 <details className="mt-3 group" open>
                   <summary className="cursor-pointer text-xs font-semibold text-cyan-300 select-none">
-                    What do the letters mean?
+                    {t("education.whatLettersMean")}
                   </summary>
                   <dl className="mt-2 space-y-1.5">
                     {legend.map(([sym, meaning]) => (
                       <div key={sym} className="flex items-baseline gap-3 text-sm">
-                        <dt className="min-w-[4.5rem] text-right text-cyan-200 shrink-0">
+                        <dt
+                          className="min-w-[4.5rem] text-right rtl:text-left text-cyan-200 shrink-0 font-mono"
+                          dir="ltr"
+                        >
                           <MathFormula latex={sym} />
                         </dt>
                         <dd className="text-slate-300 leading-snug">{meaning}</dd>

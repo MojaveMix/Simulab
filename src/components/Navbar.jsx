@@ -13,8 +13,13 @@ import {
   CloseIcon,
   ChevronDownIcon,
   ArrowRightIcon,
+  SearchIcon,
+  GlobeIcon,
+  HeartIcon,
 } from "./Icons";
 import { SIMULATION_CATALOG } from "../engine/simulationRegistry";
+import { useLanguage } from "../i18n/LanguageContext";
+import { getLocalizedSimulation } from "../i18n/simulationsI18n";
 
 export default function Navbar({
   activeView,
@@ -23,20 +28,30 @@ export default function Navbar({
   onNavigateView,
   onSelectSimulation,
   onOpenAIStudio,
+  onOpenSearch,
+  onOpenDonate,
   theme,
   onToggleTheme,
 }) {
+  const { lang, setLang, t, languages } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [simDropdownOpen, setSimDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+
   const dropdownRef = useRef(null);
+  const langDropdownRef = useRef(null);
 
   const isLight = theme === "light";
+  const currentLang = languages.find((l) => l.code === lang) || languages[0];
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setSimDropdownOpen(false);
+      }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
+        setLangDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -44,10 +59,10 @@ export default function Navbar({
   }, []);
 
   const navItems = [
-    { id: "home", label: "Home", icon: HomeIcon },
-    { id: "math-lab", label: "Mathematics", icon: MathCompassIcon },
-    { id: "physics-lab", label: "Physics", icon: AtomPhysicsIcon },
-    { id: "library", label: "Laboratories", icon: GridLibraryIcon, count: 10 },
+    { id: "home", label: t("nav.home"), icon: HomeIcon },
+    { id: "math-lab", label: t("nav.mathematics"), icon: MathCompassIcon },
+    { id: "physics-lab", label: t("nav.physics"), icon: AtomPhysicsIcon },
+    { id: "library", label: t("nav.laboratories"), icon: GridLibraryIcon, count: SIMULATION_CATALOG.length },
   ];
 
   return (
@@ -61,8 +76,8 @@ export default function Navbar({
               onNavigateView("home");
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-3 group text-left cursor-pointer focus:outline-none"
-            title="SimuLab — Home"
+            className="flex items-center gap-3 group text-start cursor-pointer focus:outline-none"
+            title="SimuLab"
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
               <VedicLogo
@@ -77,11 +92,11 @@ export default function Navbar({
                   SimuLab
                 </span>
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-cyan-500/10 border border-cyan-400/20 text-cyan-300">
-                  Platform 2.0
+                  {t("nav.platformVersion")}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 tracking-tight hidden md:block">
-                Interactive Science &amp; Simulation Engine
+                {t("nav.brandSubtitle")}
               </p>
             </div>
           </button>
@@ -129,19 +144,20 @@ export default function Navbar({
               }`}
             >
               <LabFlaskIcon className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Simulations</span>
+              <span>{t("nav.simulations")}</span>
               <ChevronDownIcon
                 className={`w-3 h-3 transition-transform ${simDropdownOpen ? "rotate-180 text-cyan-300" : ""}`}
               />
             </button>
 
             {simDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-80 rounded-2xl bg-[#090d16] border border-white/10 shadow-2xl p-2 z-50 text-left space-y-1 light-nav-menu">
+              <div className="absolute top-full start-0 mt-2 w-80 rounded-2xl bg-[#090d16] border border-white/10 shadow-2xl p-2 z-50 text-start space-y-1 light-nav-menu">
                 <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Select a Scientific Simulation
+                  {t("nav.selectSimulation")}
                 </div>
                 <div className="max-h-80 overflow-y-auto space-y-1 pr-1 custom-scroll">
-                  {SIMULATION_CATALOG.map((sim) => {
+                  {SIMULATION_CATALOG.map((baseSim) => {
+                    const sim = getLocalizedSimulation(baseSim, lang);
                     const isSelected = activeSimId === sim.id && activeView === "workspace";
                     return (
                       <button
@@ -151,13 +167,13 @@ export default function Navbar({
                           onSelectSimulation(sim.id);
                           setSimDropdownOpen(false);
                         }}
-                        className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
+                        className={`w-full p-2.5 rounded-xl flex items-center justify-between text-start transition-all cursor-pointer ${
                           isSelected
                             ? "bg-purple-500/20 text-white border border-purple-400/40"
                             : "hover:bg-slate-800 text-slate-300 hover:text-white"
                         }`}
                       >
-                        <div className="min-w-0 pr-2">
+                        <div className="min-w-0 pe-2">
                           <div className="text-xs font-bold truncate">{sim.title}</div>
                           <div className="text-[10px] text-slate-400 truncate">
                             {sim.category}
@@ -182,17 +198,89 @@ export default function Navbar({
             className="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-cyan-300 hover:text-white hover:bg-cyan-500/10 transition-all cursor-pointer"
           >
             <SparklesAIIcon className="w-3.5 h-3.5" />
-            <span>AI Studio</span>
+            <span>{t("nav.aiStudio")}</span>
           </button>
         </nav>
 
         {/* Right CTA & Utility Buttons */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          {/* Lesson search (Ctrl+K) */}
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            aria-label={t("nav.searchLessons")}
+            title={`${t("nav.searchLessons")} (${t("nav.searchKbd")})`}
+            className="h-9 px-3 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2 text-xs transition-all cursor-pointer shrink-0"
+          >
+            <SearchIcon className="w-4 h-4 text-cyan-400" />
+            <span className="hidden md:inline text-slate-400">{t("nav.searchLessons")}</span>
+            <kbd className="hidden xl:inline px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono text-slate-300">
+              {t("nav.searchKbd")}
+            </kbd>
+          </button>
+
+          {/* Language Selector Dropdown */}
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              aria-label={t("nav.language")}
+              title={t("nav.language")}
+              className="h-9 px-2.5 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 text-xs transition-all cursor-pointer shrink-0"
+            >
+              <GlobeIcon className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-xs font-bold">{currentLang.short}</span>
+              <ChevronDownIcon
+                className={`w-3 h-3 text-slate-400 transition-transform ${
+                  langDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {langDropdownOpen && (
+              <div className="absolute top-full end-0 mt-2 w-36 rounded-2xl bg-[#090d16] border border-white/10 shadow-2xl p-1.5 z-50 text-start space-y-1 light-nav-menu">
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => {
+                      setLang(l.code);
+                      setLangDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                      lang === l.code
+                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{l.flag}</span>
+                      <span>{l.label}</span>
+                    </span>
+                    {lang === l.code && <span className="text-cyan-400 text-xs">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Donate / Support Us Button */}
+          <button
+            type="button"
+            onClick={onOpenDonate}
+            aria-label={t("nav.donate")}
+            title={t("nav.donate")}
+            className="h-9 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm shadow-rose-500/10 group"
+          >
+            <HeartIcon className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">{t("nav.donate")}</span>
+          </button>
+
           {/* Quick Launch Workspace Button */}
           <button
             type="button"
             onClick={() => onNavigateView("workspace")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+            className={`h-9 px-3.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
               activeView === "workspace"
                 ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20"
                 : "bg-white/[0.08] hover:bg-white/[0.16] text-white border border-white/[0.12]"
@@ -200,7 +288,7 @@ export default function Navbar({
           >
             <LabFlaskIcon className="w-3.5 h-3.5 text-purple-300" />
             <span className="hidden sm:inline">
-              {activeView === "workspace" ? "Active Lab" : "Open Lab"}
+              {activeView === "workspace" ? t("nav.activeLab") : t("nav.openLab")}
             </span>
             <ArrowRightIcon className="w-3.5 h-3.5" />
           </button>
@@ -209,8 +297,8 @@ export default function Navbar({
           <button
             type="button"
             onClick={onToggleTheme}
-            aria-label="Toggle Dark or Light Mode"
-            title={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
+            aria-label={isLight ? t("nav.switchDark") : t("nav.switchLight")}
+            title={isLight ? t("nav.switchDark") : t("nav.switchLight")}
             className="w-9 h-9 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
           >
             {isLight ? (
@@ -251,7 +339,7 @@ export default function Navbar({
                     onNavigateView(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold text-left transition-all ${
+                  className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold text-start transition-all ${
                     isActive
                       ? "bg-cyan-500/20 text-cyan-200 border border-cyan-400/30"
                       : "bg-slate-900 text-slate-300"
@@ -264,6 +352,40 @@ export default function Navbar({
             })}
           </div>
 
+          {/* Mobile Language Selector */}
+          <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
+            <span className="text-xs text-slate-400 font-semibold">{t("nav.language")}:</span>
+            <div className="flex gap-1.5">
+              {languages.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => setLang(l.code)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    lang === l.code
+                      ? "bg-cyan-500 text-slate-950 font-black"
+                      : "bg-slate-900 text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {l.flag} {l.short}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Donate Button */}
+          <button
+            type="button"
+            onClick={() => {
+              onOpenDonate();
+              setMobileMenuOpen(false);
+            }}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-500/20 to-purple-500/20 border border-rose-500/30 text-rose-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+          >
+            <HeartIcon className="w-4 h-4 text-rose-400" />
+            <span>{t("nav.donate")}</span>
+          </button>
+
           <div className="pt-2 border-t border-white/[0.08] flex gap-2">
             <button
               type="button"
@@ -274,7 +396,7 @@ export default function Navbar({
               className="flex-1 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-2"
             >
               <LabFlaskIcon className="w-4 h-4" />
-              <span>Enter Active Lab</span>
+              <span>{t("nav.enterActiveLab")}</span>
             </button>
             <button
               type="button"
@@ -285,7 +407,7 @@ export default function Navbar({
               className="px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-xs font-bold flex items-center justify-center gap-2"
             >
               <SparklesAIIcon className="w-4 h-4" />
-              <span>AI Studio</span>
+              <span>{t("nav.aiStudio")}</span>
             </button>
           </div>
         </div>

@@ -1,12 +1,14 @@
 // Central Simulation Registry for SimuLab — Interactive Mathematics & Physics Platform
 
+import { EXTRA_SIMULATIONS } from "./extraSimulations";
+
 export const LAB_DOMAINS = [
   { id: "all", label: "All Laboratories", icon: "⚛️" },
   { id: "mathematics", label: "Mathematics Lab", icon: "📐" },
   { id: "physics", label: "Physics Lab", icon: "🔭" },
 ];
 
-export const SIMULATION_CATALOG = [
+const BASE_CATALOG = [
   {
     id: "vedic-square-3d",
     title: "Vedic Square 3D — Sacred Geometry",
@@ -606,6 +608,8 @@ export const SIMULATION_CATALOG = [
     ],
   },
 ];
+
+export const SIMULATION_CATALOG = [...BASE_CATALOG, ...EXTRA_SIMULATIONS];
 
 export function getSimulationById(id) {
   return SIMULATION_CATALOG.find((s) => s.id === id) || SIMULATION_CATALOG[0];

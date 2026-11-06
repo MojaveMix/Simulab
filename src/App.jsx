@@ -6,17 +6,29 @@ import VedicSquareSim from "./simulations/VedicSquareSim";
 import UniversalSimRunner from "./simulations/UniversalSimRunner";
 import SimulationLibrary from "./components/SimulationLibrary";
 import AISimulationStudio from "./components/AISimulationStudio";
+import LessonSearch from "./components/LessonSearch";
+import DonationModal from "./components/DonationModal";
+import { HeartIcon } from "./components/Icons";
 import { BeginnerGuideCard, FormulaCards } from "./components/EducationPanels";
 import {
   SIMULATION_CATALOG,
   getSimulationById,
 } from "./engine/simulationRegistry";
+import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
+import {
+  getLocalizedSimulation,
+  getLocalizedPresetName,
+} from "./i18n/simulationsI18n";
 
-export default function App() {
+function MainAppContent() {
+  const { t, lang } = useLanguage();
+
   // Default to the welcoming Landing Page; Vedic Square 3D is the flagship default workspace simulation
   const [activeSimId, setActiveSimId] = useState("vedic-square-3d");
   const [activeView, setActiveView] = useState("home"); // "home" | "workspace" | "library" | "math-lab" | "physics-lab"
   const [showAIStudio, setShowAIStudio] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
   const [externalParams, setExternalParams] = useState(null);
   const [lastBlueprint, setLastBlueprint] = useState(null);
 
@@ -45,13 +57,32 @@ export default function App() {
     }
   }, [theme]);
 
+  // Ctrl/Cmd + K opens the lesson search from anywhere; Esc closes it
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearch((s) => !s);
+      } else if (e.key === "Escape") {
+        setShowSearch(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);
 
-  const currentSimulation = useMemo(
+  const rawSimulation = useMemo(
     () => getSimulationById(activeSimId),
     [activeSimId]
+  );
+
+  const currentSimulation = useMemo(
+    () => getLocalizedSimulation(rawSimulation, lang),
+    [rawSimulation, lang]
   );
 
   const handleSelectSimulation = useCallback((simId, customParams = null) => {
@@ -73,7 +104,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Open a lesson (from the local lessons.json index) directly in its simulation
+  const handleOpenLesson = useCallback(
+    (lesson) => {
+      setShowSearch(false);
+      handleSelectSimulation(lesson.simId, lesson.params);
+    },
+    [handleSelectSimulation]
+  );
+
   const handleOpenAIStudio = useCallback(() => {
+    setShowSearch(false);
     setShowAIStudio((prev) => !prev);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -100,15 +141,45 @@ export default function App() {
         activeView={activeView}
         activeSimId={activeSimId}
         currentSimulation={currentSimulation}
+        onOpenSearch={() => setShowSearch(true)}
         onNavigateView={(view) => {
           setActiveView(view);
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onSelectSimulation={handleSelectSimulation}
         onOpenAIStudio={handleOpenAIStudio}
+        onOpenDonate={() => setShowDonate(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
+
+      {/* Global Real Donation / Support Modal */}
+      <DonationModal
+        isOpen={showDonate}
+        onClose={() => setShowDonate(false)}
+      />
+
+      {/* Global lesson search (Ctrl+K) */}
+      {showSearch && (
+        <div
+          className="fixed inset-0 z-[100] flex items-start justify-center pt-[14vh] px-4 bg-black/60 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowSearch(false);
+          }}
+        >
+          <div className="w-full max-w-2xl fade-up">
+            <LessonSearch
+              size="md"
+              autoFocus
+              onOpenLesson={handleOpenLesson}
+              onAskAI={handleOpenAIStudio}
+            />
+            <p className="text-center text-[11px] text-slate-400 mt-3">
+              {t("search.keyboardHint")}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
         {/* Workspace Sub-Toolbar: Only displayed when actively running an experiment */}
@@ -131,11 +202,11 @@ export default function App() {
                     {currentSimulation.title}
                   </span>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-400">
-                    {currentSimulation.domain} • {currentSimulation.category}
+                    {t(`nav.${currentSimulation.domain}`, currentSimulation.domain)} • {currentSimulation.category}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Manipulate real-time parameters below to observe instantaneous recalculations.
+                  {t("workspace.subToolbarDesc")}
                 </p>
               </div>
             </div>
@@ -143,9 +214,10 @@ export default function App() {
             {/* Quick Simulation Carousel in Workspace */}
             <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 no-scrollbar">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mr-1 shrink-0 hidden sm:inline">
-                Switch Lab:
+                {t("workspace.switchLab")}
               </span>
               {SIMULATION_CATALOG.map((sim) => {
+                const locSim = getLocalizedSimulation(sim, lang);
                 const isSelected = activeSimId === sim.id;
                 return (
                   <button
@@ -162,7 +234,7 @@ export default function App() {
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: sim.accentColor }}
                     />
-                    <span>{sim.shortTitle}</span>
+                    <span>{locSim.shortTitle}</span>
                   </button>
                 );
               })}
@@ -187,21 +259,25 @@ export default function App() {
             <div className="mb-6 p-4 rounded-2xl bg-slate-900/90 border border-cyan-400/40 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-xs font-mono text-cyan-300">
-                  <span>✨ Active AI-Synthesized Experiment</span>
+                  <span>{t("workspace.activeAIBanner")}</span>
                   <span>•</span>
-                  <span>Prompt: &ldquo;{lastBlueprint.prompt}&rdquo;</span>
+                  <span>
+                    {t("workspace.promptLabel")} &ldquo;{lastBlueprint.prompt}&rdquo;
+                  </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  <strong className="text-amber-300">Hypothesis:</strong>{" "}
+                  <strong className="text-amber-300">
+                    {t("workspace.hypothesisLabel")}{" "}
+                  </strong>
                   {lastBlueprint.hypothesis}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setLastBlueprint(null)}
-                className="text-xs text-slate-400 hover:text-white self-start md:self-center shrink-0"
+                className="text-xs text-slate-400 hover:text-white self-start md:self-center shrink-0 cursor-pointer"
               >
-                Dismiss ✕
+                {t("workspace.dismiss")}
               </button>
             </div>
           )}
@@ -209,6 +285,7 @@ export default function App() {
         {/* Main Content View Switcher */}
         {activeView === "home" && (
           <LandingPage
+            onOpenLesson={handleOpenLesson}
             onSelectSimulation={handleSelectSimulation}
             onNavigateView={(view) => {
               setActiveView(view);
@@ -216,6 +293,7 @@ export default function App() {
             }}
             onOpenAIStudio={handleOpenAIStudio}
             onLaunchBlueprint={handleLaunchBlueprint}
+            onOpenDonate={() => setShowDonate(true)}
             theme={theme}
             onToggleTheme={toggleTheme}
           />
@@ -265,7 +343,7 @@ export default function App() {
 
                 <FormulaCards
                   formulas={currentSimulation.formulas}
-                  title="The math behind it"
+                  title={t("workspace.theMathBehindIt")}
                   columns={3}
                 />
 
@@ -273,14 +351,14 @@ export default function App() {
                   <div className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl flex flex-col justify-between">
                     <div>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300 mb-2">
-                        The story behind it
+                        {t("workspace.theStoryBehindIt")}
                       </h3>
                       <p className="text-sm text-slate-300 leading-relaxed">
                         {currentSimulation.theory}
                       </p>
                     </div>
                     <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-2">
-                      {currentSimulation.presets.map((preset) => (
+                      {rawSimulation.presets.map((preset) => (
                         <button
                           key={preset.name}
                           type="button"
@@ -290,9 +368,9 @@ export default function App() {
                               _ts: Date.now(),
                             })
                           }
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-950/80 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-all"
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-950/80 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
                         >
-                          {preset.name}
+                          {getLocalizedPresetName(preset.name, lang)}
                         </button>
                       ))}
                     </div>
@@ -301,8 +379,8 @@ export default function App() {
               </div>
             ) : (
               <UniversalSimRunner
-                key={`${currentSimulation.id}-${externalParams?._ts || 0}`}
-                simulation={currentSimulation}
+                key={`${rawSimulation.id}-${externalParams?._ts || 0}`}
+                simulation={rawSimulation}
                 externalParams={externalParams}
               />
             )}
@@ -320,7 +398,7 @@ export default function App() {
               />
               <div>
                 <div className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>Created by</span>
+                  <span>{t("footer.createdBy")}</span>
                   <a
                     href="https://badr-moujahid.netlify.app/"
                     target="_blank"
@@ -332,13 +410,22 @@ export default function App() {
                   </a>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  SimuLab — Interactive Mathematics &amp; Physics Simulation Platform (feat. Vedic Square 3D)
+                  {t("footer.platformDesc")}
                 </p>
               </div>
             </div>
 
             {/* Social & Contact Links */}
             <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDonate(true)}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500/20 to-pink-500/20 hover:from-rose-500/30 hover:to-pink-500/30 border border-rose-500/40 hover:border-rose-400 text-xs font-bold text-rose-200 hover:text-white flex items-center gap-2 transition-all cursor-pointer shadow-sm shadow-rose-500/10"
+              >
+                <HeartIcon className="w-4 h-4 text-rose-400 fill-rose-400" />
+                <span>{t("footer.donate")}</span>
+              </button>
+
               <a
                 href="https://badr-moujahid.netlify.app/"
                 target="_blank"
@@ -356,7 +443,7 @@ export default function App() {
                   <line x1="2" y1="12" x2="22" y2="12" />
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                <span>Portfolio</span>
+                <span>{t("footer.portfolio")}</span>
               </a>
 
               <a
@@ -372,7 +459,7 @@ export default function App() {
                 >
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
                 </svg>
-                <span>GitHub</span>
+                <span>{t("footer.github")}</span>
               </a>
 
               <a
@@ -388,7 +475,7 @@ export default function App() {
                 >
                   <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
                 </svg>
-                <span>LinkedIn</span>
+                <span>{t("footer.linkedin")}</span>
               </a>
 
               <a
@@ -412,5 +499,13 @@ export default function App() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <MainAppContent />
+    </LanguageProvider>
   );
 }

@@ -11,16 +11,55 @@ import {
   computeConnections,
   getDigitalRootBreakdown,
 } from "../utils/vedicMath";
+import { useLanguage } from "../i18n/LanguageContext";
+import {
+  getLocalizedVedicTheme,
+  getLocalizedPatternMode,
+  getLocalizedWaveMode,
+} from "../i18n/simulationsI18n";
 
 const SYMMETRY_PAIRS = [
-  { label: "1 ↔ 8 Monad", n: 1 },
-  { label: "2 ↔ 7 Star", n: 2 },
-  { label: "3 ↔ 6 Triad", n: 3 },
-  { label: "4 ↔ 5 Octagon", n: 4 },
-  { label: "9 Supreme", n: 9 },
+  { n: 1 },
+  { n: 2 },
+  { n: 3 },
+  { n: 4 },
+  { n: 9 },
 ];
 
+function getLocalizedSymmetryPairLabel(n, lang) {
+  if (lang === "fr") {
+    switch (n) {
+      case 1: return "1 ↔ 8 Monade";
+      case 2: return "2 ↔ 7 Étoile";
+      case 3: return "3 ↔ 6 Triade";
+      case 4: return "4 ↔ 5 Octogone";
+      case 9: return "9 Suprême";
+      default: return "";
+    }
+  }
+  if (lang === "ar") {
+    switch (n) {
+      case 1: return "1 ↔ 8 الأحادية";
+      case 2: return "2 ↔ 7 النجمة";
+      case 3: return "3 ↔ 6 الثلاثية";
+      case 4: return "4 ↔ 5 الثماني";
+      case 9: return "9 السيادية";
+      default: return "";
+    }
+  }
+  switch (n) {
+    case 1: return "1 ↔ 8 Monad";
+    case 2: return "2 ↔ 7 Star";
+    case 3: return "3 ↔ 6 Triad";
+    case 4: return "4 ↔ 5 Octagon";
+    case 9: return "9 Supreme";
+    default: return "";
+  }
+}
+
 export default function VedicSquareSim({ externalParams }) {
+  const { lang, t } = useLanguage();
+
   const [number, setNumber] = useState(() => externalParams?.number ?? 5);
   const [patternMode, setPatternMode] = useState(
     () => externalParams?.patternMode ?? "constellation"
@@ -60,9 +99,19 @@ export default function VedicSquareSim({ externalParams }) {
   // Build 9x9 Vedic Square once
   const { cells } = useMemo(() => buildVedicSquare(9), []);
 
-  const primaryTheme = NUMBER_THEMES[number - 1] || NUMBER_THEMES[4];
-  const complementNumber = primaryTheme.complement;
-  const complementTheme = NUMBER_THEMES[complementNumber - 1] || NUMBER_THEMES[3];
+  const basePrimaryTheme = NUMBER_THEMES[number - 1] || NUMBER_THEMES[4];
+  const complementNumber = basePrimaryTheme.complement;
+  const baseComplementTheme =
+    NUMBER_THEMES[complementNumber - 1] || NUMBER_THEMES[3];
+
+  const primaryTheme = useMemo(
+    () => getLocalizedVedicTheme(basePrimaryTheme, lang),
+    [basePrimaryTheme, lang]
+  );
+  const complementTheme = useMemo(
+    () => getLocalizedVedicTheme(baseComplementTheme, lang),
+    [baseComplementTheme, lang]
+  );
 
   // Auto-cycle through numbers 1..9 when Tour Mode is active
   useEffect(() => {
@@ -76,7 +125,12 @@ export default function VedicSquareSim({ externalParams }) {
   // Keyboard shortcuts: 1-9 for numbers, Space for auto-cycle, D for dual mode, T for top view
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.tagName === "SELECT"
+      )
+        return;
       if (e.key >= "1" && e.key <= "9") {
         setNumber(Number(e.key));
       } else if (e.code === "Space") {
@@ -195,8 +249,18 @@ export default function VedicSquareSim({ externalParams }) {
   }, []);
 
   const colorsGradient = useMemo(
-    () => NUMBER_THEMES.map((t) => t.color).join(", "),
+    () => NUMBER_THEMES.map((th) => th.color).join(", "),
     []
+  );
+
+  const cameraOptions = useMemo(
+    () => [
+      { id: "isometric", label: t("vedic.camIso") },
+      { id: "top", label: t("vedic.camTop") },
+      { id: "front", label: t("vedic.camFront") },
+      { id: "side", label: t("vedic.camSide") },
+    ],
+    [t]
   );
 
   return (
@@ -212,15 +276,15 @@ export default function VedicSquareSim({ externalParams }) {
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
               <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-                Vedic Square Geometry
+                {t("vedic.title")}
               </h2>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-white/5 border border-white/10 text-cyan-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                WebGL Instanced Engine
+                {t("vedic.engineBadge")}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Interactive 3D modular arithmetic, digital root harmonics &amp; sacred symmetry simulation
+              {t("vedic.subTitle")}
             </p>
           </div>
         </div>
@@ -230,7 +294,7 @@ export default function VedicSquareSim({ externalParams }) {
           <button
             type="button"
             onClick={() => setAutoCycle((prev) => !prev)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
               autoCycle
                 ? "bg-amber-500/20 border-amber-400/60 text-amber-200 shadow-lg shadow-amber-500/10"
                 : "bg-slate-950/80 border-white/10 text-slate-300 hover:bg-slate-800 hover:border-white/20"
@@ -241,42 +305,42 @@ export default function VedicSquareSim({ externalParams }) {
                 autoCycle ? "bg-amber-400 animate-ping" : "bg-slate-500"
               }`}
             />
-            {autoCycle ? "Cycling 1–9 (Pause)" : "Auto-Cycle 1–9"}
+            {autoCycle ? t("vedic.cyclingPause") : t("vedic.autoCycle")}
           </button>
 
           <button
             type="button"
             onClick={() => setShowDual((prev) => !prev)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
               showDual
                 ? "bg-purple-500/20 border-purple-400/60 text-purple-200 shadow-lg shadow-purple-500/10"
                 : "bg-slate-950/80 border-white/10 text-slate-300 hover:bg-slate-800 hover:border-white/20"
             }`}
           >
             <span>✦</span>
-            Dual Symmetry ({number} ↔ {complementNumber})
+            {t("vedic.dualSymmetry", { n: number, c: complementNumber })}
           </button>
 
           <button
             type="button"
             onClick={() => setAutoRotate((prev) => !prev)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
               autoRotate
                 ? "bg-cyan-500/20 border-cyan-400/60 text-cyan-200 shadow-lg shadow-cyan-500/10"
                 : "bg-slate-950/80 border-white/10 text-slate-300 hover:bg-slate-800 hover:border-white/20"
             }`}
           >
             <span>↻</span>
-            {autoRotate ? "Orbiting" : "Auto-Orbit"}
+            {autoRotate ? t("vedic.orbiting") : t("vedic.autoOrbit")}
           </button>
 
           <button
             type="button"
             onClick={handleReset}
-            className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950/80 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
-            title="Reset Vedic Square parameters to default"
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-950/80 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+            title={t("vedic.resetTitle")}
           >
-            Reset
+            {t("vedic.reset")}
           </button>
         </div>
       </div>
@@ -289,7 +353,7 @@ export default function VedicSquareSim({ externalParams }) {
           <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Active Digital Root
+                {t("vedic.activeDigitalRoot")}
               </span>
               <span
                 className="text-xs font-semibold px-2.5 py-0.5 rounded-full border"
@@ -318,7 +382,7 @@ export default function VedicSquareSim({ externalParams }) {
                   </span>
                 </div>
                 <span className="text-xs font-mono text-slate-400">
-                  {activeCells.length} nodes
+                  {activeCells.length} {t("vedic.nodes")}
                 </span>
               </div>
 
@@ -330,6 +394,7 @@ export default function VedicSquareSim({ externalParams }) {
                 aria-label="Active Number"
                 onChange={(e) => setNumber(parseInt(e.target.value, 10))}
                 className="w-full vedic-slider cursor-pointer"
+                dir="ltr"
                 style={{
                   background: `linear-gradient(to right, ${colorsGradient})`,
                 }}
@@ -349,7 +414,7 @@ export default function VedicSquareSim({ externalParams }) {
                     key={theme.number}
                     type="button"
                     onClick={() => setNumber(theme.number)}
-                    className={`h-10 rounded-xl font-bold text-sm transition-all flex flex-col items-center justify-center relative ${
+                    className={`h-10 rounded-xl font-bold text-sm transition-all flex flex-col items-center justify-center relative cursor-pointer ${
                       isSelected
                         ? "scale-105 text-white shadow-lg ring-2 ring-white"
                         : isTwin
@@ -373,7 +438,7 @@ export default function VedicSquareSim({ externalParams }) {
             {/* Famous Vedic Mirror Pairs Quick-Select */}
             <div className="pt-3 border-t border-white/10">
               <div className="text-[11px] font-medium text-slate-400 mb-2">
-                Sacred Complement Pairs (9-Sum Harmonics):
+                {t("vedic.sacredPairs")}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {SYMMETRY_PAIRS.map((pair) => {
@@ -382,19 +447,19 @@ export default function VedicSquareSim({ externalParams }) {
                     number === NUMBER_THEMES[pair.n - 1].complement;
                   return (
                     <button
-                      key={pair.label}
+                      key={pair.n}
                       type="button"
                       onClick={() => {
                         setNumber(pair.n);
                         if (pair.n !== 9) setShowDual(true);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all border ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer ${
                         isPairActive
                           ? "bg-white/15 border-white/30 text-white"
                           : "bg-slate-800/60 border-white/5 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                       }`}
                     >
-                      {pair.label}
+                      {getLocalizedSymmetryPairLabel(pair.n, lang)}
                     </button>
                   );
                 })}
@@ -406,59 +471,65 @@ export default function VedicSquareSim({ externalParams }) {
           <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-2xl space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                Geometry &amp; FX Engine
+                {t("vedic.geometryEngine")}
               </h2>
               <span className="text-[11px] font-mono text-slate-400">
-                {connections.length} beams
+                {connections.length} {t("vedic.beams")}
               </span>
             </div>
 
             {/* Pattern Topology Selector */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-2">
-                Connection Topology
+                {t("vedic.connectionTopology")}
               </label>
               <div className="grid grid-cols-2 gap-2">
-                {PATTERN_MODES.map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setPatternMode(mode.id)}
-                    className={`p-2.5 rounded-xl text-left border transition-all ${
-                      patternMode === mode.id
-                        ? "bg-cyan-500/15 border-cyan-400/60 text-white shadow-md"
-                        : "bg-slate-950/60 border-white/5 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-                    }`}
-                  >
-                    <div className="text-xs font-bold">{mode.label}</div>
-                    <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                      {mode.desc}
-                    </div>
-                  </button>
-                ))}
+                {PATTERN_MODES.map((mode) => {
+                  const locMode = getLocalizedPatternMode(mode, lang);
+                  return (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => setPatternMode(mode.id)}
+                      className={`p-2.5 rounded-xl text-left rtl:text-right border transition-all cursor-pointer ${
+                        patternMode === mode.id
+                          ? "bg-cyan-500/15 border-cyan-400/60 text-white shadow-md"
+                          : "bg-slate-950/60 border-white/5 text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+                      }`}
+                    >
+                      <div className="text-xs font-bold">{locMode.label}</div>
+                      <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                        {locMode.desc}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* 3D Pillar Wave Mode */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-2">
-                3D Pillar Wave Motion
+                {t("vedic.pillarWaveMotion")}
               </label>
               <div className="grid grid-cols-4 gap-1.5">
-                {WAVE_MODES.map((wm) => (
-                  <button
-                    key={wm.id}
-                    type="button"
-                    onClick={() => setWaveMode(wm.id)}
-                    className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                      waveMode === wm.id
-                        ? "bg-white/15 border-white/40 text-white"
-                        : "bg-slate-950/60 border-white/5 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {wm.label}
-                  </button>
-                ))}
+                {WAVE_MODES.map((wm) => {
+                  const locWm = getLocalizedWaveMode(wm, lang);
+                  return (
+                    <button
+                      key={wm.id}
+                      type="button"
+                      onClick={() => setWaveMode(wm.id)}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                        waveMode === wm.id
+                          ? "bg-white/15 border-white/40 text-white"
+                          : "bg-slate-950/60 border-white/5 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {locWm.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -467,13 +538,13 @@ export default function VedicSquareSim({ externalParams }) {
               <button
                 type="button"
                 onClick={() => setShowLines((v) => !v)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   showLines
                     ? "bg-emerald-500/15 border-emerald-400/50 text-emerald-200"
                     : "bg-slate-950/60 border-white/5 text-slate-400"
                 }`}
               >
-                <span>Connection Lines</span>
+                <span>{t("vedic.connectionLines")}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
                     showLines ? "bg-emerald-400" : "bg-slate-600"
@@ -484,13 +555,13 @@ export default function VedicSquareSim({ externalParams }) {
               <button
                 type="button"
                 onClick={() => setShowPulses((v) => !v)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   showPulses && showLines
                     ? "bg-cyan-500/15 border-cyan-400/50 text-cyan-200"
                     : "bg-slate-950/60 border-white/5 text-slate-400"
                 }`}
               >
-                <span>Photon Pulses</span>
+                <span>{t("vedic.photonPulses")}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
                     showPulses && showLines ? "bg-cyan-400" : "bg-slate-600"
@@ -501,13 +572,13 @@ export default function VedicSquareSim({ externalParams }) {
               <button
                 type="button"
                 onClick={() => setShowCrystals((v) => !v)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   showCrystals
                     ? "bg-pink-500/15 border-pink-400/50 text-pink-200"
                     : "bg-slate-950/60 border-white/5 text-slate-400"
                 }`}
               >
-                <span>Node Crystals</span>
+                <span>{t("vedic.nodeCrystals")}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
                     showCrystals ? "bg-pink-400" : "bg-slate-600"
@@ -518,13 +589,13 @@ export default function VedicSquareSim({ externalParams }) {
               <button
                 type="button"
                 onClick={() => setShowDual((v) => !v)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   showDual
                     ? "bg-purple-500/15 border-purple-400/50 text-purple-200"
                     : "bg-slate-950/60 border-white/5 text-slate-400"
                 }`}
               >
-                <span>9-Complement</span>
+                <span>{t("vedic.nineComplement")}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
                     showDual ? "bg-purple-400" : "bg-slate-600"
@@ -537,8 +608,8 @@ export default function VedicSquareSim({ externalParams }) {
             <div className="space-y-3 pt-2 border-t border-white/10">
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">Beam Thickness</span>
-                  <span className="font-mono text-slate-200">
+                  <span className="text-slate-400">{t("vedic.beamThickness")}</span>
+                  <span className="font-mono text-slate-200" dir="ltr">
                     {lineThickness.toFixed(1)}×
                   </span>
                 </div>
@@ -550,13 +621,14 @@ export default function VedicSquareSim({ externalParams }) {
                   value={lineThickness}
                   onChange={(e) => setLineThickness(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  dir="ltr"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">Animation Speed</span>
-                  <span className="font-mono text-slate-200">
+                  <span className="text-slate-400">{t("vedic.animationSpeed")}</span>
+                  <span className="font-mono text-slate-200" dir="ltr">
                     {animationSpeed.toFixed(1)}×
                   </span>
                 </div>
@@ -568,13 +640,14 @@ export default function VedicSquareSim({ externalParams }) {
                   value={animationSpeed}
                   onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  dir="ltr"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">3D Pillar Elevation</span>
-                  <span className="font-mono text-slate-200">
+                  <span className="text-slate-400">{t("vedic.pillarElevation")}</span>
+                  <span className="font-mono text-slate-200" dir="ltr">
                     {elevationScale.toFixed(1)}×
                   </span>
                 </div>
@@ -586,6 +659,7 @@ export default function VedicSquareSim({ externalParams }) {
                   value={elevationScale}
                   onChange={(e) => setElevationScale(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  dir="ltr"
                 />
               </div>
             </div>
@@ -595,20 +669,25 @@ export default function VedicSquareSim({ externalParams }) {
           <section className="bg-slate-900/70 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Digital Root Inspector
+                {t("vedic.inspector")}
               </h3>
               <span className="text-[11px] text-cyan-400 font-mono">
-                {hoveredCell ? "Live Hover" : "Active Sample"}
+                {hoveredCell ? t("vedic.liveHover") : t("vedic.activeSample")}
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10 font-mono text-sm">
               <div className="flex items-center justify-between text-slate-300">
                 <span>
-                  Row <strong className="text-white">{formulaBreakdown.row}</strong> × Col{" "}
-                  <strong className="text-white">{formulaBreakdown.col}</strong>
+                  {t("vedic.rowColProduct", {
+                    row: formulaBreakdown.row,
+                    col: formulaBreakdown.col,
+                    product: formulaBreakdown.product,
+                  })}
                 </span>
-                <span className="text-slate-400">= {formulaBreakdown.product}</span>
+                <span className="text-slate-400 font-mono" dir="ltr">
+                  = {formulaBreakdown.product}
+                </span>
               </div>
 
               {formulaBreakdown.steps.length > 0 ? (
@@ -616,20 +695,24 @@ export default function VedicSquareSim({ externalParams }) {
                   {formulaBreakdown.steps.map((step, idx) => (
                     <div key={idx} className="flex justify-between">
                       <span>
-                        Step {idx + 1}: {step.expression}
+                        {t("vedic.stepN", { step: idx + 1 })} {step.expression}
                       </span>
-                      <span className="text-slate-200 font-bold">= {step.result}</span>
+                      <span className="text-slate-200 font-bold" dir="ltr">
+                        = {step.result}
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="mt-2 pt-2 border-t border-white/5 text-xs text-slate-500">
-                  Single digit product (already reduced)
+                  {t("vedic.singleDigit")}
                 </div>
               )}
 
               <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between">
-                <span className="text-xs text-slate-400">Digital Root:</span>
+                <span className="text-xs text-slate-400">
+                  {t("vedic.digitalRoot")}
+                </span>
                 <span
                   className="text-lg font-black px-2.5 py-0.5 rounded-lg"
                   style={{
@@ -656,7 +739,7 @@ export default function VedicSquareSim({ externalParams }) {
             }}
           >
             {/* Top-Left HUD Overlay */}
-            <div className="pointer-events-none absolute top-4 left-4 z-20 max-w-sm bg-slate-950/75 backdrop-blur-md rounded-2xl p-3.5 border border-white/10">
+            <div className="pointer-events-none absolute top-4 left-4 rtl:left-auto rtl:right-4 z-20 max-w-sm bg-slate-950/75 backdrop-blur-md rounded-2xl p-3.5 border border-white/10">
               <div className="flex items-center gap-2.5">
                 <span
                   className="w-3 h-3 rounded-full"
@@ -666,7 +749,7 @@ export default function VedicSquareSim({ externalParams }) {
                   }}
                 />
                 <span className="font-bold text-sm text-white">
-                  Root {number}: {primaryTheme.name}
+                  {primaryTheme.name}
                 </span>
                 {showDual && complementNumber !== number && (
                   <span
@@ -676,7 +759,7 @@ export default function VedicSquareSim({ externalParams }) {
                       color: complementTheme.accent,
                     }}
                   >
-                    + Twin {complementNumber}
+                    + {complementTheme.name}
                   </span>
                 )}
               </div>
@@ -687,13 +770,15 @@ export default function VedicSquareSim({ externalParams }) {
               {/* Live Telemetry Pills */}
               <div className="flex flex-wrap gap-2 mt-3 pt-2.5 border-t border-white/10 text-[11px] font-mono">
                 <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">
-                  Active Cells: <strong className="text-white">{activeCells.length}</strong>
+                  {t("vedic.activeCells")}{" "}
+                  <strong className="text-white">{activeCells.length}</strong>
                 </span>
                 <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">
-                  Connections: <strong className="text-white">{connections.length}</strong>
+                  {t("vedic.connections")}{" "}
+                  <strong className="text-white">{connections.length}</strong>
                 </span>
                 <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">
-                  Photons:{" "}
+                  {t("vedic.photons")}{" "}
                   <strong className="text-cyan-300">
                     {showLines && showPulses ? connections.length * 2 : 0}
                   </strong>
@@ -702,18 +787,13 @@ export default function VedicSquareSim({ externalParams }) {
             </div>
 
             {/* Top-Right Camera Preset Bar */}
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-slate-950/75 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
-              {[
-                { id: "isometric", label: "3D Iso" },
-                { id: "top", label: "Top Mandala" },
-                { id: "front", label: "Front" },
-                { id: "side", label: "Side" },
-              ].map((cam) => (
+            <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20 flex items-center gap-1.5 bg-slate-950/75 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
+              {cameraOptions.map((cam) => (
                 <button
                   key={cam.id}
                   type="button"
                   onClick={() => handleCameraSelect(cam.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     cameraPreset === cam.id
                       ? "bg-white text-slate-950 shadow"
                       : "text-slate-300 hover:bg-white/10 hover:text-white"
@@ -726,11 +806,9 @@ export default function VedicSquareSim({ externalParams }) {
 
             {/* Bottom Controls Hint Bar */}
             <div className="pointer-events-none absolute bottom-3.5 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 bg-slate-950/70 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-              <span>
-                Drag to rotate • Scroll to zoom • Click any 3D pillar to lock root
-              </span>
+              <span>{t("vedic.controlsHint")}</span>
               <span className="hidden sm:inline font-mono text-[11px] text-slate-400">
-                Keys: [1–9] Root • [Space] Auto-Tour • [D] Dual • [T] Top View
+                {t("vedic.keysHint")}
               </span>
             </div>
 
@@ -766,10 +844,10 @@ export default function VedicSquareSim({ externalParams }) {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-bold text-white">
-                    2D Sacred Matrix Overlay
+                    {t("vedic.matrixOverlay")}
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Click or hover any cell to sync with 3D space
+                    {t("vedic.matrixHint")}
                   </p>
                 </div>
                 <span
@@ -780,7 +858,7 @@ export default function VedicSquareSim({ externalParams }) {
                     backgroundColor: `${primaryTheme.color}15`,
                   }}
                 >
-                  9×9 Grid
+                  {t("vedic.grid9x9")}
                 </span>
               </div>
 
@@ -805,14 +883,14 @@ export default function VedicSquareSim({ externalParams }) {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="text-sm font-bold text-white">
-                      Harmonic Row Sequence (×{number})
+                      {t("vedic.harmonicRow", { number })}
                     </h3>
                     <p className="text-xs text-slate-400">
-                      Digital root oscillation across columns 1 to 9
+                      {t("vedic.harmonicDesc")}
                     </p>
                   </div>
                   <span className="text-xs font-mono text-cyan-300">
-                    mod 9 cycle
+                    {t("vedic.mod9Cycle")}
                   </span>
                 </div>
 
@@ -839,7 +917,7 @@ export default function VedicSquareSim({ externalParams }) {
                             boxShadow: `0 0 10px ${barTheme.color}55`,
                           }}
                         />
-                        <span className="text-[10px] font-mono text-slate-500 mt-1.5">
+                        <span className="text-[10px] font-mono text-slate-500 mt-1.5" dir="ltr">
                           ×{item.col}
                         </span>
                       </div>
@@ -851,31 +929,31 @@ export default function VedicSquareSim({ externalParams }) {
               {/* How to Use / Guide Cards */}
               <div className="mt-4 pt-4 border-t border-white/10 space-y-2.5">
                 <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                  Interactive Guide
+                  {t("vedic.interactiveGuide")}
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
                     <div className="font-semibold text-white mb-0.5">
-                      1. Select Root
+                      {t("vedic.guideStep1Title")}
                     </div>
                     <p className="text-[11px] text-slate-400 leading-snug">
-                      Choose digits 1–9 or click any cell to morph the 3D pillars.
+                      {t("vedic.guideStep1Desc")}
                     </p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
                     <div className="font-semibold text-white mb-0.5">
-                      2. Dual Mirror
+                      {t("vedic.guideStep2Title")}
                     </div>
                     <p className="text-[11px] text-slate-400 leading-snug">
-                      Enable 9-Complement to overlay twin symmetries (e.g. 2 ↔ 7).
+                      {t("vedic.guideStep2Desc")}
                     </p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5">
                     <div className="font-semibold text-white mb-0.5">
-                      3. Top Mandala
+                      {t("vedic.guideStep3Title")}
                     </div>
                     <p className="text-[11px] text-slate-400 leading-snug">
-                      Switch camera to Top Mandala to inspect pure sacred geometry.
+                      {t("vedic.guideStep3Desc")}
                     </p>
                   </div>
                 </div>
