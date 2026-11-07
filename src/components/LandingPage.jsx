@@ -254,7 +254,13 @@ export default function LandingPage({
       {/* ===================== TWO LABS ===================== */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Reveal>
-          <div className="lab-card h-full rounded-3xl border border-purple-400/20 bg-gradient-to-br from-purple-500/10 via-slate-900/60 to-slate-900/60 p-7 sm:p-9 space-y-5 flex flex-col text-start">
+          <div
+            className={`lab-card h-full rounded-3xl border p-7 sm:p-9 space-y-5 flex flex-col text-start ${
+              isLight
+                ? "border-purple-200/90 bg-gradient-to-br from-purple-50/90 via-white to-white shadow-xl shadow-purple-500/[0.06]"
+                : "border-purple-400/20 bg-gradient-to-br from-purple-500/10 via-slate-900/60 to-slate-900/60"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/15 border border-purple-400/30 text-purple-300">
                 <MathCompassIcon className="w-3.5 h-3.5" /> {t("landing.mathDepartment")}
@@ -273,14 +279,24 @@ export default function LandingPage({
             <button
               type="button"
               onClick={() => onNavigateView("math-lab")}
-              className="self-start px-5 py-2.5 rounded-xl text-sm font-bold bg-purple-600/25 hover:bg-purple-600 text-purple-100 border border-purple-400/30 flex items-center gap-2 transition-all cursor-pointer"
+              className={`self-start px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                isLight
+                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/20 keep-white"
+                  : "bg-purple-600/25 hover:bg-purple-600 text-purple-100 border border-purple-400/30"
+              }`}
             >
               <span>{t("landing.exploreMath")}</span> <ArrowRightIcon className="w-4 h-4" />
             </button>
           </div>
         </Reveal>
         <Reveal delay={120}>
-          <div className="lab-card h-full rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-slate-900/60 p-7 sm:p-9 space-y-5 flex flex-col text-start">
+          <div
+            className={`lab-card h-full rounded-3xl border p-7 sm:p-9 space-y-5 flex flex-col text-start ${
+              isLight
+                ? "border-cyan-200/90 bg-gradient-to-br from-cyan-50/90 via-white to-white shadow-xl shadow-cyan-500/[0.06]"
+                : "border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-slate-900/60"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">
                 <AtomPhysicsIcon className="w-3.5 h-3.5" /> {t("landing.physicsDepartment")}
@@ -299,7 +315,11 @@ export default function LandingPage({
             <button
               type="button"
               onClick={() => onNavigateView("physics-lab")}
-              className="self-start px-5 py-2.5 rounded-xl text-sm font-bold bg-cyan-600/25 hover:bg-cyan-600 text-cyan-100 border border-cyan-400/30 flex items-center gap-2 transition-all cursor-pointer"
+              className={`self-start px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                isLight
+                  ? "bg-cyan-600 hover:bg-cyan-700 text-white shadow-md shadow-cyan-500/20 keep-white"
+                  : "bg-cyan-600/25 hover:bg-cyan-600 text-cyan-100 border border-cyan-400/30"
+              }`}
             >
               <span>{t("landing.explorePhysics")}</span> <ArrowRightIcon className="w-4 h-4" />
             </button>

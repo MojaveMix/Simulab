@@ -6,7 +6,7 @@ const LanguageContext = createContext(null);
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English", short: "EN", flag: "🇺🇸", dir: "ltr" },
   { code: "fr", label: "Français", short: "FR", flag: "🇫🇷", dir: "ltr" },
-  { code: "ar", label: "العربية", short: "AR", flag: "🇸🇦", dir: "rtl" },
+  { code: "ar", label: "العربية", short: "AR", flag: "🇸🇦", dir: "ltr" },
 ];
 
 export function LanguageProvider({ children }) {
@@ -22,7 +22,7 @@ export function LanguageProvider({ children }) {
     }
   });
 
-  const isRTL = lang === "ar";
+  const isRTL = false;
 
   useEffect(() => {
     try {
@@ -31,13 +31,9 @@ export function LanguageProvider({ children }) {
 
     const html = document.documentElement;
     html.lang = lang;
-    html.dir = isRTL ? "rtl" : "ltr";
-    if (isRTL) {
-      html.classList.add("rtl");
-    } else {
-      html.classList.remove("rtl");
-    }
-  }, [lang, isRTL]);
+    html.dir = "ltr";
+    html.classList.remove("rtl");
+  }, [lang]);
 
   const setLang = useCallback((newLang) => {
     if (["en", "fr", "ar"].includes(newLang)) {

@@ -163,7 +163,7 @@ export default function LessonSearch({ onOpenLesson, onAskAI, autoFocus = false,
             const pick = results[highlight] || results[0];
             if (pick) open(pick.lesson);
           }}
-          className="shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-indigo-500 text-white hover:brightness-110 flex items-center gap-2 cursor-pointer"
+          className="shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-indigo-500 text-white hover:brightness-110 flex items-center gap-2 cursor-pointer keep-white"
         >
           <span>{t("search.simulateBtn")}</span>
           <ArrowRightIcon className="w-4 h-4" />

@@ -416,9 +416,9 @@ export default function VedicSquareSim({ externalParams }) {
                     onClick={() => setNumber(theme.number)}
                     className={`h-10 rounded-xl font-bold text-sm transition-all flex flex-col items-center justify-center relative cursor-pointer ${
                       isSelected
-                        ? "scale-105 text-white shadow-lg ring-2 ring-white"
+                        ? "scale-105 text-white shadow-lg ring-2 ring-cyan-400 keep-white"
                         : isTwin
-                        ? "text-white ring-1 ring-dashed ring-white/70"
+                        ? "text-white ring-1 ring-dashed ring-white/70 keep-white"
                         : "bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white"
                     }`}
                     style={{
@@ -739,7 +739,7 @@ export default function VedicSquareSim({ externalParams }) {
             }}
           >
             {/* Top-Left HUD Overlay */}
-            <div className="pointer-events-none absolute top-4 left-4 rtl:left-auto rtl:right-4 z-20 max-w-sm bg-slate-950/75 backdrop-blur-md rounded-2xl p-3.5 border border-white/10">
+            <div className="pointer-events-none absolute top-3 left-3 right-3 sm:right-auto sm:top-4 sm:left-4 rtl:sm:left-auto rtl:sm:right-4 z-20 sm:max-w-sm bg-slate-950/75 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-white/10">
               <div className="flex items-center gap-2.5">
                 <span
                   className="w-3 h-3 rounded-full"
@@ -763,12 +763,12 @@ export default function VedicSquareSim({ externalParams }) {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-300/90 mt-1.5 leading-relaxed">
+              <p className="hidden sm:block text-xs text-slate-300/90 mt-1.5 leading-relaxed">
                 {primaryTheme.description}
               </p>
 
               {/* Live Telemetry Pills */}
-              <div className="flex flex-wrap gap-2 mt-3 pt-2.5 border-t border-white/10 text-[11px] font-mono">
+              <div className="flex flex-wrap gap-2 mt-2 sm:mt-3 pt-2 sm:pt-2.5 border-t border-white/10 text-[11px] font-mono">
                 <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">
                   {t("vedic.activeCells")}{" "}
                   <strong className="text-white">{activeCells.length}</strong>
@@ -787,7 +787,7 @@ export default function VedicSquareSim({ externalParams }) {
             </div>
 
             {/* Top-Right Camera Preset Bar */}
-            <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20 flex items-center gap-1.5 bg-slate-950/75 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
+            <div className="absolute bottom-14 right-3 sm:bottom-auto sm:top-4 sm:right-4 rtl:right-auto rtl:left-3 rtl:sm:left-4 z-20 flex items-center gap-1.5 bg-slate-950/75 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
               {cameraOptions.map((cam) => (
                 <button
                   key={cam.id}

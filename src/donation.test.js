@@ -3,37 +3,23 @@ import { DONATION_CONFIG, buildPaymentUrl } from "./config/donationConfig";
 import { TRANSLATIONS } from "./i18n/translations";
 
 describe("donation configuration and URL builder", () => {
-  it("has valid creator recipient name and methods", () => {
-    expect(DONATION_CONFIG.recipientName).toBe("Badr Moujahid");
-    expect(DONATION_CONFIG.buyMeACoffee.enabled).toBe(true);
+  it("has valid creator recipient name and only PayPal.me and Ko-fi methods", () => {
+    expect(DONATION_CONFIG.recipientName.toLowerCase()).toBe("badr moujahid");
     expect(DONATION_CONFIG.paypal.enabled).toBe(true);
     expect(DONATION_CONFIG.kofi.enabled).toBe(true);
-    expect(DONATION_CONFIG.githubSponsors.enabled).toBe(true);
-    expect(DONATION_CONFIG.stripe.enabled).toBe(true);
-    expect(DONATION_CONFIG.crypto.enabled).toBe(true);
+    expect(DONATION_CONFIG.buyMeACoffee).toBeUndefined();
+    expect(DONATION_CONFIG.githubSponsors).toBeUndefined();
+    expect(DONATION_CONFIG.stripe).toBeUndefined();
+    expect(DONATION_CONFIG.crypto).toBeUndefined();
     expect(DONATION_CONFIG.presetAmounts).toEqual([3, 5, 10, 25, 50]);
   });
 
-  it("builds correct payment URLs with custom amounts", () => {
+  it("builds correct payment URLs for PayPal.me and Ko-fi", () => {
     const paypalUrl = buildPaymentUrl("paypal", 15);
-    expect(paypalUrl).toContain("paypal.me/BadrMoujahid/15USD");
-
-    const bmacUrl = buildPaymentUrl("buymeacoffee", 25);
-    expect(bmacUrl).toContain("buymeacoffee.com/badrmoujahid");
+    expect(paypalUrl).toContain("paypal.me/badermouj/15USD");
 
     const kofiUrl = buildPaymentUrl("kofi", 10);
     expect(kofiUrl).toContain("ko-fi.com/badrmoujahid");
-
-    const githubUrl = buildPaymentUrl("github", 5);
-    expect(githubUrl).toContain("github.com/sponsors/MojaveMix");
-  });
-
-  it("provides valid crypto wallet addresses", () => {
-    expect(DONATION_CONFIG.crypto.wallets.length).toBeGreaterThanOrEqual(3);
-    const symbols = DONATION_CONFIG.crypto.wallets.map((w) => w.symbol);
-    expect(symbols).toContain("USDT");
-    expect(symbols).toContain("ETH");
-    expect(symbols).toContain("BTC");
   });
 });
 
@@ -47,11 +33,10 @@ describe("donation i18n translations", () => {
       "selectAmount",
       "custom",
       "chooseMethod",
+      "methodPaypalDesc",
+      "methodKofiDesc",
       "proceedTo",
       "securityNote",
-      "cryptoTitle",
-      "copyAddress",
-      "copied",
       "whyDonate",
       "thankYou",
     ];

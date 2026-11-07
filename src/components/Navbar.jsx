@@ -35,16 +35,18 @@ export default function Navbar({
 }) {
   const { lang, setLang, t, languages } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSimsOpen, setMobileSimsOpen] = useState(false);
   const [simDropdownOpen, setSimDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
+  const headerRef = useRef(null);
   const dropdownRef = useRef(null);
   const langDropdownRef = useRef(null);
 
   const isLight = theme === "light";
   const currentLang = languages.find((l) => l.code === lang) || languages[0];
 
-  // Close dropdowns on outside click
+  // Close dropdowns & mobile drawer on outside click, Escape key, or desktop resize
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -53,33 +55,70 @@ export default function Navbar({
       if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
         setLangDropdownOpen(false);
       }
+      if (headerRef.current && !headerRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setSimDropdownOpen(false);
+        setLangDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    }
+    function handleResize() {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const navItems = [
     { id: "home", label: t("nav.home"), icon: HomeIcon },
     { id: "math-lab", label: t("nav.mathematics"), icon: MathCompassIcon },
     { id: "physics-lab", label: t("nav.physics"), icon: AtomPhysicsIcon },
-    { id: "library", label: t("nav.laboratories"), icon: GridLibraryIcon, count: SIMULATION_CATALOG.length },
+    {
+      id: "library",
+      label: t("nav.laboratories"),
+      icon: GridLibraryIcon,
+      count: SIMULATION_CATALOG.length,
+    },
   ];
 
+  const utilityBtnClass = isLight
+    ? "border-slate-200/90 bg-slate-100/90 hover:bg-slate-200/80 text-slate-700 hover:text-slate-950"
+    : "border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white";
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b transition-colors duration-300 backdrop-blur-xl bg-[#05050a]/85 border-white/[0.08] light-nav">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <header
+      ref={headerRef}
+      className={`sticky top-0 z-50 w-full border-b transition-colors duration-300 backdrop-blur-xl light-nav ${
+        isLight
+          ? "bg-white/95 border-slate-200/90 text-slate-900 shadow-sm shadow-slate-900/[0.04]"
+          : "bg-[#05050a]/90 border-white/[0.08] text-slate-100"
+      }`}
+    >
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 h-16 flex items-center justify-between gap-2">
         {/* Brand Identity */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center shrink-0">
           <button
             type="button"
             onClick={() => {
               onNavigateView("home");
               setMobileMenuOpen(false);
             }}
-            className="flex items-center gap-3 group text-start cursor-pointer focus:outline-none"
+            className="flex items-center gap-2.5 group text-left cursor-pointer focus:outline-none"
             title="SimuLab"
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
               <VedicLogo
                 primaryColor={currentSimulation?.accentColor || "#A855F7"}
                 secondaryColor="#38BDF8"
@@ -88,14 +127,30 @@ export default function Navbar({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black tracking-tight text-white group-hover:text-cyan-400 transition-colors">
+                <span
+                  className={`text-base sm:text-lg font-black tracking-tight whitespace-nowrap transition-colors ${
+                    isLight
+                      ? "text-slate-900 group-hover:text-cyan-600"
+                      : "text-white group-hover:text-cyan-400"
+                  }`}
+                >
                   SimuLab
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-cyan-500/10 border border-cyan-400/20 text-cyan-300">
+                <span
+                  className={`hidden 2xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase whitespace-nowrap border ${
+                    isLight
+                      ? "bg-cyan-50 border-cyan-300/80 text-cyan-700"
+                      : "bg-cyan-500/10 border-cyan-400/20 text-cyan-300"
+                  }`}
+                >
                   {t("nav.platformVersion")}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 tracking-tight hidden md:block">
+              <p
+                className={`text-[11px] tracking-tight hidden 2xl:block truncate max-w-[200px] ${
+                  isLight ? "text-slate-500" : "text-slate-400"
+                }`}
+              >
                 {t("nav.brandSubtitle")}
               </p>
             </div>
@@ -105,7 +160,11 @@ export default function Navbar({
         {/* Center Desktop Navigation */}
         <nav
           aria-label="Main Navigation"
-          className="hidden lg:flex items-center gap-1 bg-slate-900/60 p-1 rounded-2xl border border-white/[0.06] text-xs font-semibold"
+          className={`hidden lg:flex items-center gap-0.5 xl:gap-1 p-1 rounded-2xl border text-xs font-semibold shrink-0 ${
+            isLight
+              ? "bg-slate-100/90 border-slate-200/90"
+              : "bg-slate-900/60 border-white/[0.06]"
+          }`}
         >
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -115,16 +174,36 @@ export default function Navbar({
                 key={item.id}
                 type="button"
                 onClick={() => onNavigateView(item.id)}
-                className={`px-3 py-1.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer ${
+                className={`px-2.5 xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? "bg-white/[0.12] text-white shadow-sm border border-white/[0.12]"
+                    ? isLight
+                      ? "bg-white text-slate-900 shadow-sm border border-slate-200/90"
+                      : "bg-white/[0.12] text-white shadow-sm border border-white/[0.12]"
+                    : isLight
+                    ? "text-slate-600 hover:text-slate-950 hover:bg-white/60"
                     : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-cyan-400" : "text-slate-400"}`} />
+                <Icon
+                  className={`hidden xl:block w-3.5 h-3.5 shrink-0 ${
+                    isActive
+                      ? isLight
+                        ? "text-cyan-600"
+                        : "text-cyan-400"
+                      : isLight
+                      ? "text-slate-500"
+                      : "text-slate-400"
+                  }`}
+                />
                 <span>{item.label}</span>
                 {item.count && (
-                  <span className="px-1.5 py-0.2 rounded-md bg-white/10 text-[10px] font-mono text-slate-300">
+                  <span
+                    className={`hidden 2xl:inline-block px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                      isLight
+                        ? "bg-slate-200/80 text-slate-700"
+                        : "bg-white/10 text-slate-300"
+                    }`}
+                  >
                     {item.count}
                   </span>
                 )}
@@ -137,28 +216,53 @@ export default function Navbar({
             <button
               type="button"
               onClick={() => setSimDropdownOpen(!simDropdownOpen)}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2.5 xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
                 simDropdownOpen || activeView === "workspace"
-                  ? "text-cyan-300 bg-cyan-500/10"
+                  ? isLight
+                    ? "text-cyan-700 bg-cyan-50 border border-cyan-200"
+                    : "text-cyan-300 bg-cyan-500/10"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-950 hover:bg-white/60"
                   : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
               }`}
             >
-              <LabFlaskIcon className="w-3.5 h-3.5 text-cyan-400" />
+              <LabFlaskIcon
+                className={`hidden xl:block w-3.5 h-3.5 shrink-0 ${
+                  isLight ? "text-cyan-600" : "text-cyan-400"
+                }`}
+              />
               <span>{t("nav.simulations")}</span>
               <ChevronDownIcon
-                className={`w-3 h-3 transition-transform ${simDropdownOpen ? "rotate-180 text-cyan-300" : ""}`}
+                className={`w-3 h-3 shrink-0 transition-transform ${
+                  simDropdownOpen
+                    ? isLight
+                      ? "rotate-180 text-cyan-700"
+                      : "rotate-180 text-cyan-300"
+                    : ""
+                }`}
               />
             </button>
 
             {simDropdownOpen && (
-              <div className="absolute top-full start-0 mt-2 w-80 rounded-2xl bg-[#090d16] border border-white/10 shadow-2xl p-2 z-50 text-start space-y-1 light-nav-menu">
-                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div
+                className={`absolute top-full left-0 mt-2 w-80 rounded-2xl border shadow-2xl p-2 z-50 text-left space-y-1 light-nav-menu ${
+                  isLight
+                    ? "bg-white border-slate-200 shadow-slate-900/15"
+                    : "bg-[#090d16] border-white/10"
+                }`}
+              >
+                <div
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
+                    isLight ? "text-slate-500" : "text-slate-400"
+                  }`}
+                >
                   {t("nav.selectSimulation")}
                 </div>
                 <div className="max-h-80 overflow-y-auto space-y-1 pr-1 custom-scroll">
                   {SIMULATION_CATALOG.map((baseSim) => {
                     const sim = getLocalizedSimulation(baseSim, lang);
-                    const isSelected = activeSimId === sim.id && activeView === "workspace";
+                    const isSelected =
+                      activeSimId === sim.id && activeView === "workspace";
                     return (
                       <button
                         key={sim.id}
@@ -167,15 +271,25 @@ export default function Navbar({
                           onSelectSimulation(sim.id);
                           setSimDropdownOpen(false);
                         }}
-                        className={`w-full p-2.5 rounded-xl flex items-center justify-between text-start transition-all cursor-pointer ${
+                        className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-purple-500/20 text-white border border-purple-400/40"
+                            ? isLight
+                              ? "bg-purple-50 text-purple-950 border border-purple-300"
+                              : "bg-purple-500/20 text-white border border-purple-400/40"
+                            : isLight
+                            ? "hover:bg-slate-100 text-slate-700 hover:text-slate-950"
                             : "hover:bg-slate-800 text-slate-300 hover:text-white"
                         }`}
                       >
-                        <div className="min-w-0 pe-2">
-                          <div className="text-xs font-bold truncate">{sim.title}</div>
-                          <div className="text-[10px] text-slate-400 truncate">
+                        <div className="min-w-0 pr-2">
+                          <div className="text-xs font-bold truncate">
+                            {sim.title}
+                          </div>
+                          <div
+                            className={`text-[10px] truncate ${
+                              isLight ? "text-slate-500" : "text-slate-400"
+                            }`}
+                          >
                             {sim.category}
                           </div>
                         </div>
@@ -195,26 +309,46 @@ export default function Navbar({
           <button
             type="button"
             onClick={onOpenAIStudio}
-            className="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-cyan-300 hover:text-white hover:bg-cyan-500/10 transition-all cursor-pointer"
+            className={`px-2.5 xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+              isLight
+                ? "text-cyan-700 hover:text-cyan-950 hover:bg-cyan-50"
+                : "text-cyan-300 hover:text-white hover:bg-cyan-500/10"
+            }`}
           >
-            <SparklesAIIcon className="w-3.5 h-3.5" />
+            <SparklesAIIcon className="w-3.5 h-3.5 shrink-0" />
             <span>{t("nav.aiStudio")}</span>
           </button>
         </nav>
 
         {/* Right CTA & Utility Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Lesson search (Ctrl+K) */}
           <button
             type="button"
             onClick={onOpenSearch}
             aria-label={t("nav.searchLessons")}
             title={`${t("nav.searchLessons")} (${t("nav.searchKbd")})`}
-            className="h-9 px-3 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2 text-xs transition-all cursor-pointer shrink-0"
+            className={`h-9 w-9 2xl:w-auto 2xl:px-3 rounded-xl border flex items-center justify-center gap-2 text-xs transition-all cursor-pointer shrink-0 ${utilityBtnClass}`}
           >
-            <SearchIcon className="w-4 h-4 text-cyan-400" />
-            <span className="hidden md:inline text-slate-400">{t("nav.searchLessons")}</span>
-            <kbd className="hidden xl:inline px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-mono text-slate-300">
+            <SearchIcon
+              className={`w-4 h-4 shrink-0 ${
+                isLight ? "text-cyan-600" : "text-cyan-400"
+              }`}
+            />
+            <span
+              className={`hidden 2xl:inline whitespace-nowrap ${
+                isLight ? "text-slate-600" : "text-slate-400"
+              }`}
+            >
+              {t("nav.searchLessons")}
+            </span>
+            <kbd
+              className={`hidden 2xl:inline px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                isLight
+                  ? "bg-slate-200/90 text-slate-700"
+                  : "bg-white/10 text-slate-300"
+              }`}
+            >
               {t("nav.searchKbd")}
             </kbd>
           </button>
@@ -226,19 +360,29 @@ export default function Navbar({
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
               aria-label={t("nav.language")}
               title={t("nav.language")}
-              className="h-9 px-2.5 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 text-xs transition-all cursor-pointer shrink-0"
+              className={`h-9 w-[64px] px-2 rounded-xl border flex items-center justify-center gap-1 text-xs transition-all cursor-pointer shrink-0 ${utilityBtnClass}`}
             >
-              <GlobeIcon className="w-3.5 h-3.5 text-cyan-400" />
+              <GlobeIcon
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  isLight ? "text-cyan-600" : "text-cyan-400"
+                }`}
+              />
               <span className="text-xs font-bold">{currentLang.short}</span>
               <ChevronDownIcon
-                className={`w-3 h-3 text-slate-400 transition-transform ${
-                  langDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`w-3 h-3 shrink-0 transition-transform ${
+                  isLight ? "text-slate-500" : "text-slate-400"
+                } ${langDropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
 
             {langDropdownOpen && (
-              <div className="absolute top-full end-0 mt-2 w-36 rounded-2xl bg-[#090d16] border border-white/10 shadow-2xl p-1.5 z-50 text-start space-y-1 light-nav-menu">
+              <div
+                className={`absolute top-full right-0 mt-2 w-40 rounded-2xl border shadow-2xl p-1.5 z-50 text-left space-y-1 light-nav-menu ${
+                  isLight
+                    ? "bg-white border-slate-200 shadow-slate-900/15"
+                    : "bg-[#090d16] border-white/10"
+                }`}
+              >
                 {languages.map((l) => (
                   <button
                     key={l.code}
@@ -249,7 +393,11 @@ export default function Navbar({
                     }}
                     className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
                       lang === l.code
-                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                        ? isLight
+                          ? "bg-cyan-50 text-cyan-800 border border-cyan-300"
+                          : "bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                        : isLight
+                        ? "text-slate-700 hover:text-slate-950 hover:bg-slate-100"
                         : "text-slate-300 hover:text-white hover:bg-slate-800"
                     }`}
                   >
@@ -257,7 +405,15 @@ export default function Navbar({
                       <span>{l.flag}</span>
                       <span>{l.label}</span>
                     </span>
-                    {lang === l.code && <span className="text-cyan-400 text-xs">✓</span>}
+                    {lang === l.code && (
+                      <span
+                        className={`text-xs font-bold ${
+                          isLight ? "text-cyan-600" : "text-cyan-400"
+                        }`}
+                      >
+                        ✓
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -270,27 +426,36 @@ export default function Navbar({
             onClick={onOpenDonate}
             aria-label={t("nav.donate")}
             title={t("nav.donate")}
-            className="h-9 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm shadow-rose-500/10 group"
+            className={`hidden md:flex h-9 w-9 xl:w-auto xl:px-3 rounded-xl border items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-sm group ${
+              isLight
+                ? "border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 shadow-rose-500/5"
+                : "border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white shadow-rose-500/10"
+            }`}
           >
-            <HeartIcon className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">{t("nav.donate")}</span>
+            <HeartIcon
+              className={`w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform ${
+                isLight ? "text-rose-500 fill-rose-500/20" : "text-rose-400"
+              }`}
+            />
+            <span className="hidden xl:inline">{t("nav.donate")}</span>
           </button>
 
           {/* Quick Launch Workspace Button */}
           <button
             type="button"
             onClick={() => onNavigateView("workspace")}
-            className={`h-9 px-3.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+            className={`hidden md:flex h-9 px-3 rounded-xl text-xs font-bold items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-md ${
               activeView === "workspace"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20 keep-white"
+                : isLight
+                ? "bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 keep-white"
                 : "bg-white/[0.08] hover:bg-white/[0.16] text-white border border-white/[0.12]"
             }`}
           >
-            <LabFlaskIcon className="w-3.5 h-3.5 text-purple-300" />
-            <span className="hidden sm:inline">
+            <LabFlaskIcon className="w-3.5 h-3.5 text-purple-300 shrink-0" />
+            <span>
               {activeView === "workspace" ? t("nav.activeLab") : t("nav.openLab")}
             </span>
-            <ArrowRightIcon className="w-3.5 h-3.5" />
           </button>
 
           {/* Theme Toggle Button */}
@@ -299,10 +464,14 @@ export default function Navbar({
             onClick={onToggleTheme}
             aria-label={isLight ? t("nav.switchDark") : t("nav.switchLight")}
             title={isLight ? t("nav.switchDark") : t("nav.switchLight")}
-            className="w-9 h-9 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+            className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+              isLight
+                ? "border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-slate-800"
+                : "border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-200 hover:text-white"
+            }`}
           >
             {isLight ? (
-              <MoonIcon className="w-4 h-4 text-purple-400" />
+              <MoonIcon className="w-4 h-4 text-indigo-600" />
             ) : (
               <SunIcon className="w-4 h-4 text-amber-400" />
             )}
@@ -313,20 +482,64 @@ export default function Navbar({
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle Navigation Menu"
-            className="lg:hidden w-9 h-9 rounded-xl border border-white/[0.1] bg-slate-900/60 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all cursor-pointer shrink-0"
+            aria-expanded={mobileMenuOpen}
+            className={`lg:hidden w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${utilityBtnClass}`}
           >
             {mobileMenuOpen ? (
-              <CloseIcon className="w-5 h-5 text-white" />
+              <CloseIcon
+                className={`w-5 h-5 ${isLight ? "text-slate-900" : "text-white"}`}
+              />
             ) : (
-              <MenuIcon className="w-5 h-5 text-white" />
+              <MenuIcon
+                className={`w-5 h-5 ${isLight ? "text-slate-900" : "text-white"}`}
+              />
             )}
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Floating Mobile & Tablet Navigation Drawer Overlay */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-white/[0.08] bg-[#090d16] px-4 py-4 space-y-3 light-nav-menu">
+        <div
+          className={`lg:hidden absolute top-full left-0 right-0 z-50 border-b px-4 py-4 space-y-3 max-h-[calc(100dvh-4rem)] overflow-y-auto light-nav-menu ${
+            isLight
+              ? "border-slate-200 bg-white/98 text-slate-900 shadow-2xl shadow-slate-900/15"
+              : "border-white/[0.08] bg-[#090d16]/98 text-slate-100 shadow-2xl shadow-black/80"
+          }`}
+        >
+          {/* Mobile Quick Search Bar */}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onOpenSearch();
+            }}
+            className={`w-full p-3 rounded-xl border flex items-center justify-between text-xs font-semibold transition-all cursor-pointer ${
+              isLight
+                ? "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                : "bg-slate-900/90 border-white/10 text-slate-300 hover:bg-slate-800"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <SearchIcon
+                className={`w-4 h-4 ${
+                  isLight ? "text-cyan-600" : "text-cyan-400"
+                }`}
+              />
+              <span>{t("nav.searchLessons")}</span>
+            </span>
+            <kbd
+              className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                isLight
+                  ? "bg-slate-200 text-slate-700"
+                  : "bg-white/10 text-slate-300"
+              }`}
+            >
+              {t("nav.searchKbd")}
+            </kbd>
+          </button>
+
+          {/* Primary Navigation Links */}
           <div className="grid grid-cols-2 gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -339,38 +552,139 @@ export default function Navbar({
                     onNavigateView(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold text-start transition-all ${
+                  className={`p-3 rounded-xl flex items-center justify-between gap-2 text-xs font-bold text-left transition-all cursor-pointer border ${
                     isActive
-                      ? "bg-cyan-500/20 text-cyan-200 border border-cyan-400/30"
-                      : "bg-slate-900 text-slate-300"
+                      ? isLight
+                        ? "bg-cyan-50 text-cyan-900 border-cyan-300"
+                        : "bg-cyan-500/20 text-cyan-200 border-cyan-400/30"
+                      : isLight
+                      ? "bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100"
+                      : "bg-slate-900 text-slate-300 border-white/5 hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className="w-4 h-4 text-cyan-400" />
-                  <span>{item.label}</span>
+                  <span className="flex items-center gap-2 min-w-0">
+                    <Icon
+                      className={`w-4 h-4 shrink-0 ${
+                        isLight ? "text-cyan-600" : "text-cyan-400"
+                      }`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </span>
+                  {item.count && (
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0 ${
+                        isLight
+                          ? "bg-slate-200 text-slate-700"
+                          : "bg-white/10 text-slate-300"
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Mobile Language Selector */}
-          <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold">{t("nav.language")}:</span>
-            <div className="flex gap-1.5">
-              {languages.map((l) => (
-                <button
-                  key={l.code}
-                  type="button"
-                  onClick={() => setLang(l.code)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    lang === l.code
-                      ? "bg-cyan-500 text-slate-950 font-black"
-                      : "bg-slate-900 text-slate-300 hover:text-white"
+          {/* Mobile Accordion: Quick Simulation Selector */}
+          <div
+            className={`rounded-xl border overflow-hidden ${
+              isLight
+                ? "border-slate-200 bg-slate-50/70"
+                : "border-white/10 bg-slate-900/60"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setMobileSimsOpen((v) => !v)}
+              className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <LabFlaskIcon
+                  className={`w-4 h-4 ${
+                    isLight ? "text-cyan-600" : "text-cyan-400"
                   }`}
-                >
-                  {l.flag} {l.short}
-                </button>
-              ))}
-            </div>
+                />
+                <span>
+                  {t("nav.simulations")} ({SIMULATION_CATALOG.length})
+                </span>
+              </span>
+              <ChevronDownIcon
+                className={`w-4 h-4 transition-transform ${
+                  mobileSimsOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {mobileSimsOpen && (
+              <div
+                className={`px-2 pb-2 pt-1 border-t max-h-60 overflow-y-auto space-y-1 ${
+                  isLight ? "border-slate-200" : "border-white/10"
+                }`}
+              >
+                {SIMULATION_CATALOG.map((baseSim) => {
+                  const sim = getLocalizedSimulation(baseSim, lang);
+                  const isSelected =
+                    activeSimId === sim.id && activeView === "workspace";
+                  return (
+                    <button
+                      key={sim.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectSimulation(sim.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-2 rounded-lg flex items-center justify-between text-left text-xs transition-all cursor-pointer ${
+                        isSelected
+                          ? isLight
+                            ? "bg-purple-100 text-purple-950 font-bold"
+                            : "bg-purple-500/25 text-white font-bold"
+                          : isLight
+                          ? "text-slate-700 hover:bg-slate-200/70"
+                          : "text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      <span className="truncate pr-2">{sim.title}</span>
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: sim.accentColor }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Primary Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onNavigateView("workspace");
+                setMobileMenuOpen(false);
+              }}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md keep-white"
+            >
+              <LabFlaskIcon className="w-4 h-4" />
+              <span>{t("nav.enterActiveLab")}</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onOpenAIStudio();
+                setMobileMenuOpen(false);
+              }}
+              className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer ${
+                isLight
+                  ? "bg-cyan-50 border-cyan-300 text-cyan-800 hover:bg-cyan-100"
+                  : "bg-cyan-500/20 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/30"
+              }`}
+            >
+              <SparklesAIIcon className="w-4 h-4" />
+              <span>{t("nav.aiStudio")}</span>
+            </button>
           </div>
 
           {/* Mobile Donate Button */}
@@ -380,35 +694,64 @@ export default function Navbar({
               onOpenDonate();
               setMobileMenuOpen(false);
             }}
-            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-500/20 to-purple-500/20 border border-rose-500/30 text-rose-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            className={`w-full py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+              isLight
+                ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100"
+                : "bg-gradient-to-r from-rose-500/20 to-purple-500/20 border-rose-500/30 text-rose-200"
+            }`}
           >
-            <HeartIcon className="w-4 h-4 text-rose-400" />
+            <HeartIcon className="w-4 h-4 text-rose-500" />
             <span>{t("nav.donate")}</span>
           </button>
 
-          <div className="pt-2 border-t border-white/[0.08] flex gap-2">
+          {/* Mobile Theme & Language Preferences Row */}
+          <div
+            className={`pt-3 border-t flex flex-wrap items-center justify-between gap-2 ${
+              isLight ? "border-slate-200" : "border-white/[0.08]"
+            }`}
+          >
+            {/* Theme Switcher Pill */}
             <button
               type="button"
-              onClick={() => {
-                onNavigateView("workspace");
-                setMobileMenuOpen(false);
-              }}
-              className="flex-1 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-2"
+              onClick={onToggleTheme}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                isLight
+                  ? "bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200"
+                  : "bg-slate-900 border-white/10 text-slate-200 hover:bg-slate-800"
+              }`}
             >
-              <LabFlaskIcon className="w-4 h-4" />
-              <span>{t("nav.enterActiveLab")}</span>
+              {isLight ? (
+                <>
+                  <MoonIcon className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{t("nav.switchDark")}</span>
+                </>
+              ) : (
+                <>
+                  <SunIcon className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{t("nav.switchLight")}</span>
+                </>
+              )}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                onOpenAIStudio();
-                setMobileMenuOpen(false);
-              }}
-              className="px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-xs font-bold flex items-center justify-center gap-2"
-            >
-              <SparklesAIIcon className="w-4 h-4" />
-              <span>{t("nav.aiStudio")}</span>
-            </button>
+
+            {/* Language Selector Pills */}
+            <div className="flex items-center gap-1.5">
+              {languages.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => setLang(l.code)}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    lang === l.code
+                      ? "bg-cyan-500 text-slate-950 border-cyan-400 font-black"
+                      : isLight
+                      ? "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                      : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {l.flag} {l.short}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

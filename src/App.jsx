@@ -50,6 +50,10 @@ function MainAppContent() {
       root.classList.remove("light");
       root.classList.add("dark");
     }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute("content", theme === "light" ? "#f8fafc" : "#05050a");
+    }
     try {
       localStorage.setItem("simulab-theme", theme);
     } catch {
@@ -123,8 +127,10 @@ function MainAppContent() {
 
   return (
     <div
-      className={`min-h-screen bg-[#05050a] bg-cosmic-grid text-slate-100 relative overflow-x-hidden transition-colors duration-300 ${
-        isLight ? "light-theme" : "dark-theme"
+      className={`min-h-screen bg-cosmic-grid relative overflow-x-hidden transition-colors duration-300 ${
+        isLight
+          ? "light-theme bg-slate-50 text-slate-900"
+          : "dark-theme bg-[#05050a] text-slate-100"
       }`}
       style={{ "--active-color": currentSimulation.accentColor }}
     >
@@ -157,6 +163,7 @@ function MainAppContent() {
       <DonationModal
         isOpen={showDonate}
         onClose={() => setShowDonate(false)}
+        theme={theme}
       />
 
       {/* Global lesson search (Ctrl+K) */}
@@ -174,7 +181,7 @@ function MainAppContent() {
               onOpenLesson={handleOpenLesson}
               onAskAI={handleOpenAIStudio}
             />
-            <p className="text-center text-[11px] text-slate-400 mt-3">
+            <p className="text-center text-[11px] text-slate-200 keep-white mt-3">
               {t("search.keyboardHint")}
             </p>
           </div>

@@ -13,7 +13,7 @@ export function BeginnerGuideCard({ simId, accentColor = "#22d3ee" }) {
   return (
     <section
       aria-label="Beginner guide"
-      className="bg-gradient-to-br from-slate-900/80 to-slate-900/50 backdrop-blur-xl rounded-2xl p-5 border shadow-xl"
+      className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-5 border shadow-xl"
       style={{ borderColor: `${accentColor}55` }}
     >
       <div className="flex items-center gap-2 mb-1">

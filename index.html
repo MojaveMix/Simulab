@@ -17,8 +17,23 @@
       content="SimuLab — Interactive Mathematics & Physics Simulation Platform featuring 3D Vedic Square Sacred Geometry, Calculus, Chaos, Mechanics, Optics, Waves & Thermodynamics."
     />
     <title>SimuLab — Interactive Mathematics & Physics Simulation Platform</title>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("simulab-theme");
+          var root = document.documentElement;
+          if (saved === "light") {
+            root.classList.remove("dark");
+            root.classList.add("light");
+          } else {
+            root.classList.remove("light");
+            root.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#05050a] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+  <body class="antialiased selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -74,11 +74,11 @@ export default function Matrix2D({
                   onClick={() => onSelectCell(cell)}
                   className={`relative z-10 flex items-center justify-center rounded-md text-xs font-bold transition-all duration-200 ${
                     isPrimary
-                      ? "scale-105 text-white shadow-lg ring-1 ring-white/60"
+                      ? "scale-105 text-white shadow-lg ring-1 ring-white/60 keep-white"
                       : isComplement
-                      ? "scale-100 text-white ring-1 ring-white/40"
+                      ? "scale-100 text-white ring-1 ring-white/40 keep-white"
                       : isHovered
-                      ? "bg-slate-700 text-white ring-1 ring-cyan-400"
+                      ? "bg-slate-800 text-white ring-1 ring-cyan-400"
                       : "bg-slate-900/90 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                   }`}
                   style={{

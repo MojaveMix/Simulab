@@ -5,12 +5,17 @@
 @layer base {
   :root {
     --active-color: #06d6a0;
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
   }
 
   body {
     background-color: #05050a;
     color: #f1f5f9;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Inter', 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
@@ -62,37 +67,70 @@
 /* Subtle glass grid background (Dark & Light) */
 .bg-cosmic-grid {
   background-size: 40px 40px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
 .light-theme.bg-cosmic-grid {
-  background-color: #f1f5f9;
-  color: #0f172a;
-  background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
 }
 
-/* Comprehensive Light Theme surface & typography adaptation */
-.light-theme [class*="bg-slate-900"] {
-  background-color: rgba(255, 255, 255, 0.88) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08) !important;
+/* ==========================================================================
+   Comprehensive Light Theme Surface & Typography Adaptation
+   ========================================================================== */
+
+.light-theme [class*="bg-slate-900"]:not(.keep-white) {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(15, 23, 42, 0.11) !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.07) !important;
 }
 
-.light-theme [class*="bg-slate-950"] {
-  background-color: rgba(241, 245, 249, 0.92) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
+.light-theme [class*="bg-slate-950"]:not(.keep-white) {
+  background-color: rgba(241, 245, 249, 0.95) !important;
+  border-color: rgba(15, 23, 42, 0.11) !important;
 }
 
-.light-theme [class*="bg-slate-800"] {
+.light-theme [class*="bg-slate-800"]:not(.keep-white),
+.light-theme [class*="bg-slate-700"]:not(.keep-white) {
   background-color: #e2e8f0 !important;
 }
 
-.light-theme .text-white {
+.light-theme [class*="hover:bg-slate-800"]:hover:not(.keep-white),
+.light-theme [class*="hover:bg-slate-700"]:hover:not(.keep-white) {
+  background-color: #cbd5e1 !important;
+}
+
+/* Subtle white alpha surfaces become subtle slate alpha surfaces in Light Mode */
+.light-theme [class*="bg-white/"]:not(.keep-white) {
+  background-color: rgba(15, 23, 42, 0.055) !important;
+}
+
+.light-theme [class*="hover:bg-white/"]:hover:not(.keep-white) {
+  background-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+.light-theme [class*="hover:bg-cyan-500"]:hover {
+  background-color: #06b6d4 !important;
   color: #0f172a !important;
+}
+
+/* Typography contrast in Light Mode */
+.light-theme .text-white:not(.keep-white) {
+  color: #0f172a !important;
+}
+
+/* Preserve white text on vibrant colored buttons, badges, and active tiles */
+.light-theme .keep-white,
+.light-theme .keep-white *,
+.light-theme [class*="from-purple-600"],
+.light-theme [class*="from-cyan-500"],
+.light-theme [class*="from-rose-500"] {
+  color: #ffffff !important;
 }
 
 .light-theme .text-slate-100,
@@ -107,16 +145,18 @@
   color: #475569 !important;
 }
 
+.light-theme .text-cyan-100,
 .light-theme .text-cyan-200,
 .light-theme .text-cyan-300,
 .light-theme .text-cyan-400 {
-  color: #0284c7 !important;
+  color: #0369a1 !important;
 }
 
+.light-theme .text-purple-100,
 .light-theme .text-purple-200,
 .light-theme .text-purple-300,
 .light-theme .text-purple-400 {
-  color: #7e22ce !important;
+  color: #6b21a8 !important;
 }
 
 .light-theme .text-emerald-200,
@@ -131,55 +171,64 @@
   color: #b45309 !important;
 }
 
+.light-theme .text-rose-200,
+.light-theme .text-rose-300,
+.light-theme .text-rose-400 {
+  color: #be123c !important;
+}
+
+.light-theme .text-pink-200,
+.light-theme .text-pink-300,
+.light-theme .text-pink-400 {
+  color: #be185d !important;
+}
+
 .light-theme [class*="border-white/"] {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-/* Keep interactive 3D/2D canvas HUD overlays & colored buttons readable in Light Mode */
-.light-theme .light-nav {
-  background-color: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
+/* Keep interactive 3D/2D canvas viewport & its internal HUD dark and high-contrast */
+.light-theme .sim-viewport-dark {
+  background-color: #05070e !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
 }
 
-.light-theme .light-nav .text-white {
-  color: #0f172a !important;
-}
-
-.light-theme .light-nav [class*="bg-slate-900"] {
-  background-color: #f1f5f9 !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
-}
-
-.light-theme .light-nav-menu {
-  background-color: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.15) !important;
-}
-
-.light-theme .light-nav-menu .text-white {
-  color: #0f172a !important;
-}
-
-.light-theme .light-nav-menu [class*="bg-slate-900"] {
-  background-color: #f8fafc !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
-}
-
-.light-theme .light-nav-menu [class*="hover:bg-slate-800"]:hover {
-  background-color: #f1f5f9 !important;
+.light-theme .sim-viewport-dark [class*="bg-slate-900"] {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
 .light-theme .sim-viewport-dark [class*="bg-slate-950"] {
-  background-color: rgba(15, 23, 42, 0.82) !important;
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
+
+.light-theme .sim-viewport-dark [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.light-theme .sim-viewport-dark [class*="border-white/"] {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 .light-theme .sim-viewport-dark .text-white {
   color: #ffffff !important;
 }
+
+.light-theme .sim-viewport-dark .text-slate-200,
 .light-theme .sim-viewport-dark .text-slate-300,
 .light-theme .sim-viewport-dark [class*="text-slate-300"] {
   color: #cbd5e1 !important;
 }
-.light-theme .sim-viewport-dark .text-cyan-300 {
+
+.light-theme .sim-viewport-dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.light-theme .sim-viewport-dark .text-cyan-200,
+.light-theme .sim-viewport-dark .text-cyan-300,
+.light-theme .sim-viewport-dark .text-cyan-400 {
   color: #67e8f9 !important;
 }
 
@@ -190,6 +239,8 @@
 }
 .light-theme .hero-surface {
   background: linear-gradient(160deg, #ffffff 0%, #eef2ff 55%, #f5f3ff 100%);
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 20px 50px -20px rgba(15, 23, 42, 0.08);
 }
 .hero-aurora {
   position: absolute;
@@ -201,7 +252,7 @@
   filter: blur(30px);
   animation: aurora-shift 16s ease-in-out infinite alternate;
 }
-.light-theme .hero-aurora { opacity: 0.55; }
+.light-theme .hero-aurora { opacity: 0.45; }
 @keyframes aurora-shift {
   0% { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
   100% { transform: translate3d(3%, 3%, 0) rotate(6deg) scale(1.08); }
@@ -214,6 +265,9 @@
   background-clip: text;
   color: transparent;
   animation: gradient-flow 7s linear infinite;
+}
+.light-theme .gradient-text {
+  background-image: linear-gradient(100deg, #0284c7, #7c3aed 40%, #db2777 70%, #0284c7);
 }
 @keyframes gradient-flow { to { background-position: 220% center; } }
 
@@ -272,11 +326,24 @@
   50% { box-shadow: 0 10px 60px -5px rgba(34, 211, 238, 0.6); }
 }
 
-.light-theme .lesson-search-box { background-color: rgba(255, 255, 255, 0.95) !important; }
-.light-theme .lesson-search-box input { color: #0f172a; }
-.light-theme .lesson-search-panel { background-color: rgba(255, 255, 255, 0.98) !important; }
-.light-theme .lesson-search-panel .text-white { color: #0f172a !important; }
-.light-theme .marquee-track { color: #94a3b8; }
+.light-theme .lesson-search-box {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+}
+.light-theme .lesson-search-box input {
+  color: #0f172a !important;
+}
+.light-theme .lesson-search-panel {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18) !important;
+}
+.light-theme .lesson-search-panel .text-white {
+  color: #0f172a !important;
+}
+.light-theme .marquee-track {
+  color: #64748b;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .hero-aurora, .gradient-text, .marquee-track, .wave-a, .wave-b, .orbit-a, .orbit-b, .sun-glow, .glow-pulse, .caret-blink { animation: none !important; }
@@ -284,18 +351,8 @@
   .reveal { opacity: 1; transform: none; }
 }
 
-/* RTL & Arabic Typography Enhancements */
-html[dir="rtl"] body {
-  font-family: 'Cairo', 'Tajawal', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-html[dir="rtl"] input,
-html[dir="rtl"] textarea {
-  text-align: right;
-}
-html[dir="rtl"] input[type="range"] {
-  direction: ltr; /* sliders keep standard intuitive left-to-right fill */
-}
-html[dir="rtl"] .katex {
+/* Consistent layout direction across all languages */
+.katex {
   direction: ltr;
   unicode-bidi: isolate;
   display: inline-block;
